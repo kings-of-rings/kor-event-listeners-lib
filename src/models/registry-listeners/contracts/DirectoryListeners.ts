@@ -32,7 +32,7 @@ export class DirectoryListeners {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
 					this.contractAddress = data.directory;
-					if (this.contractAddress.length > 0) {
+					if (this.contractAddress?.length > 0) {
 					this.rpcUrl = data.rpcUrl;
 					this.ethersProvider = getEthersProvider(this.rpcUrl);
 					this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);

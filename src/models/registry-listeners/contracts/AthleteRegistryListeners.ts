@@ -36,7 +36,7 @@ export class AthleteRegistryListeners {
 				if (data) {
 					console.log("AthleteRegistryListeners", data);
 					this.contractAddress = data.highSchool;
-					if (this.contractAddress.length > 0) {
+					if (this.contractAddress?.length > 0) {
 					this.rpcUrl = data.rpcUrl;
 					this.ethersProvider = getEthersProvider(this.rpcUrl);
 					this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);

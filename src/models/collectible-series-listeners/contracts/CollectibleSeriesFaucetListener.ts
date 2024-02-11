@@ -31,7 +31,7 @@ export class CollectibleSeriesFaucetListener {
 		db.collection(this.eventsDirectory).doc("collectible")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				if (data && data.collectibleFaucet && data.collectibleFaucet.length > 0) {
+				if (data && data.collectibleFaucet && data?.collectibleFaucet?.length > 0) {
 					this.contractAddress = data.collectibleFaucet;
 					this.rpcUrl = data.rpcUrl;
 					this.ethersProvider = getEthersProvider(this.rpcUrl);
