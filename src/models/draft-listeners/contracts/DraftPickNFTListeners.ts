@@ -8,23 +8,25 @@ const EVENTS_ABI = [
 
 export class DraftPickNFTListeners {
 	eventsDirectory: string;
+	fieldName: string;
 	chainId: number;
 	rpcUrl: string = "";
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, isFootball: boolean) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
-	};
+		this.fieldName = isFootball ? "draftPickNFTsFootball" : "draftPickNFTsBasketball";
+};
 
 	async startListeners(db: admin.firestore.Firestore) {
 		this._setListeners(db);
 	}
 
 	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("registry")
+		db.collection(this.eventsDirectory).doc("collectible")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
@@ -46,8 +48,8 @@ export class DraftPickNFTListeners {
 }
 
 export class DraftPickNFTListenersFactory {
-	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): DraftPickNFTListeners {
-		const itemToReturn = new DraftPickNFTListeners(chainId, eventsDirectory);
+	static startListeners(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore): DraftPickNFTListeners {
+		const itemToReturn = new DraftPickNFTListeners(chainId, eventsDirectory, isFootball);
 		itemToReturn.startListeners(db);
 		return itemToReturn;
 	}

@@ -14,15 +14,17 @@ const EVENTS_ABI = [
 
 export class DraftControllerListeners {
 	eventsDirectory: string;
+	fieldName: string;
 	chainId: number;
 	rpcUrl: string = "";
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, isFootball: boolean) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.fieldName = isFootball ? "draftControllerFootball" : "draftControllerBasketball";
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
@@ -30,11 +32,11 @@ export class DraftControllerListeners {
 	}
 
 	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("registry")
+		db.collection(this.eventsDirectory).doc("collectible")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
-					this.contractAddress = data.college;
+					this.contractAddress = data[this.fieldName];
 					if (this.contractAddress.length > 0) {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
@@ -78,8 +80,8 @@ export class DraftControllerListeners {
 }
 
 export class DraftControllerListenersFactory {
-	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): DraftControllerListeners {
-		const itemToReturn = new DraftControllerListeners(chainId, eventsDirectory);
+	static startListeners(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore): DraftControllerListeners {
+		const itemToReturn = new DraftControllerListeners(chainId, eventsDirectory, isFootball);
 		itemToReturn.startListeners(db);
 		return itemToReturn;
 	}

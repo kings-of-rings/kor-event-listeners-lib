@@ -7,8 +7,10 @@ import { CollegeRegistryListeners, CollegeRegistryListenersFactory } from "../re
 export class DraftListeners {
 	chainId: number;
 	eventsDirectory: string;
-	draftController: DraftControllerListeners;
-	draftPickNFTs: DraftPickNFTListeners;
+	draftControllerBasketball: DraftControllerListeners;
+	draftPickNFTsBasketball: DraftPickNFTListeners;
+	draftControllerFootball: DraftControllerListeners;
+	draftPickNFTsFootball: DraftPickNFTListeners;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
@@ -16,8 +18,10 @@ export class DraftListeners {
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this.draftController = DraftControllerListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
-		this.draftPickNFTs = DraftPickNFTListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
+		this.draftControllerBasketball = DraftControllerListenersFactory.startListeners(this.chainId, this.eventsDirectory, false, db);
+		this.draftPickNFTsBasketball = DraftPickNFTListenersFactory.startListeners(this.chainId, this.eventsDirectory, false, db);
+		this.draftControllerFootball = DraftControllerListenersFactory.startListeners(this.chainId, this.eventsDirectory, true, db);
+		this.draftPickNFTsFootball = DraftPickNFTListenersFactory.startListeners(this.chainId, this.eventsDirectory, true, db);
 	}
 }
 
