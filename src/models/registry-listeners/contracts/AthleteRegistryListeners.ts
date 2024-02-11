@@ -34,6 +34,7 @@ export class AthleteRegistryListeners {
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
+					console.log("AthleteRegistryListeners", data);
 					this.contractAddress = data.highSchool;
 					if (this.contractAddress.length > 0) {
 					this.rpcUrl = data.rpcUrl;
