@@ -56,7 +56,6 @@ export class HighSchoolRegistryListeners {
 		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolAdded", this.db);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
-		console.log('HighSchoolAdded.event', event);
 		if (result.status === undefined) {
 			const errorData = {
 				"error": "Error in HighSchoolAdded.saveData",
