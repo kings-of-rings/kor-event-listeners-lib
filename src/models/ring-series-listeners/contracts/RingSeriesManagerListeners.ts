@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
+import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
 	"event AthleteRingSeriesQtySet(uint256 _athleteId, uint256 _maxQty, uint256 _athleteQty)",
@@ -54,18 +55,57 @@ export class RingSeriesManagerListeners {
 	async _handleAthleteRingSeriesQtySetEvent(log: ethers.Event) {
 		const event = new AthleteRingSeriesQtySet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteRingSeriesQtySet", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in RingSeriesManagerListeners._handleAthleteRingSeriesQtySetEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 	async _handleAthleteRingSeriesEligibilitySetEvent(log: ethers.Event) {
 		const event = new AthleteRingSeriesEligibilitySet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteRingSeriesEligibilitySet", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in RingSeriesManagerListeners._handleAthleteRingSeriesEligibilitySetEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 
 	async _handleRingSeriesYearAddedEvent(log: ethers.Event) {
 		const event = new RingSeriesYearAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "ringSeriesYearAdded", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in RingSeriesManagerListeners._handleRingSeriesYearAddedEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 }
 

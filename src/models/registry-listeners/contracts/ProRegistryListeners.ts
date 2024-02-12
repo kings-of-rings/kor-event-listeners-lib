@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
+import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
 	"event TeamAdded(uint256  _teamId, string  _name, string _mascot,  string _conference, bool  _isFootball)",
@@ -52,13 +53,39 @@ export class ProRegistryListeners {
 	async _handleTeamAddedEvent(log: ethers.Event) {
 		const event = new ProTeamAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamAdded", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in ProRegistryListeners._handleTeamAddedEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 
 	async _handleTeamChangedEvent(log: ethers.Event) {
 		const event = new ProTeamChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamChanged", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in ProRegistryListeners._handleTeamChangedEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 
 }

@@ -1,4 +1,4 @@
-import { FaucetTargetPrice, TokenFaucetSale } from "@kings-of-rings/kor-contract-event-data-models/lib";
+import { AthleteActiveYearAdded, AthleteAdded, AthleteCollegeChanged, AthleteHighSchoolChanged, AthleteIsSignedChanged, AthleteNameChanged, AthleteProTeamChanged, PaymentDisbursed, PaymentReceived } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
@@ -6,11 +6,11 @@ import { getEthersProvider } from "../../../utils/getEthersProvider";
 import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
-	"event FaucetTargetPrice(uint256 _price)",
-	"event TokenFaucetSale(uint256 _saleId, address _buyer, uint256 _qty, uint256 _totalCost)"
+	"event PaymentReceived(uint256 indexed _paymentId,uint256 indexed _athleteId,address indexed _paymentToken,uint256 _amount,uint256 _balance)",
+	"event PaymentDisbursed(uint256 indexed _disbursementId,uint256 indexed _athleteId,address indexed _paymentToken,address _disbursementAddress,uint256 _amount)",
 ];
 
-export class NILCoinFaucetListeners {
+export class AthletePaymentManagerListeners {
 	eventsDirectory: string;
 	chainId: number;
 	rpcUrl: string = "";
@@ -24,8 +24,6 @@ export class NILCoinFaucetListeners {
 		this.eventsDirectory = eventsDirectory;
 		this.db = db;
 		// Bind this to the event handlers
-		this._handleFaucetTargetPriceEvent = this._handleFaucetTargetPriceEvent.bind(this);
-		this._handleTokenFaucetSaleEvent = this._handleTokenFaucetSaleEvent.bind(this);
 
 	};
 
@@ -34,30 +32,30 @@ export class NILCoinFaucetListeners {
 	}
 
 	_setListeners() {
-		this.db.collection(this.eventsDirectory).doc("nil")
+		this.db.collection(this.eventsDirectory).doc("registry")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
-					this.contractAddress = data.nilCoinFaucet;
+					this.contractAddress = data.highSchool;
 					if (this.contractAddress?.length > 0) {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.FaucetTargetPrice(), (_price, eventObject) => this._handleFaucetTargetPriceEvent(eventObject));
-						this.contract.on(this.contract.filters.TokenFaucetSale(), (_saleId, _buyer, _qty, _totalCost, eventObject) => this._handleTokenFaucetSaleEvent(eventObject));
+						this.contract.on(this.contract.filters.PaymentReceived(), (_paymentId, _athleteId, _paymentToken, _amount, _balance, eventObject) => this._handleAthletePaymentReceivedEvent(eventObject));
+						this.contract.on(this.contract.filters.PaymentDisbursed(), (_disbursementId, _athleteId, _paymentToken, _disbursementAddress, _amount, eventObject) => this._handleAthletePaymentDisbursedEvent(eventObject));
 					}
 				}
 			});
 	}
 
-	async _handleFaucetTargetPriceEvent(log: ethers.Event) {
-		const event = new FaucetTargetPrice(log, this.chainId);
-		const endpoint = await getEndpoint(this.eventsDirectory, "nilFaucetTargetPrice", this.db);
+	async _handleAthletePaymentReceivedEvent(log: ethers.Event) {
+		const event = new PaymentReceived(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "athletePaymentReceived", this.db);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
 		if (result.status === undefined) {
 			const errorData = {
-				"error": "Error in NILCoinFaucetListeners._handleFaucetTargetPriceEvent",
+				"error": "Error in AthletePaymentReceived.saveData",
 				"result": result.response.data,
 				"endpoint": endpoint,
 				"txHash": log.transactionHash,
@@ -68,14 +66,15 @@ export class NILCoinFaucetListeners {
 			await saveError(errorData, this.db);
 		}
 	}
-	async _handleTokenFaucetSaleEvent(log: ethers.Event) {
-		const event = new TokenFaucetSale(log);
-		const endpoint = await getEndpoint(this.eventsDirectory, "tokenFaucetSale", this.db);
+
+	async _handleAthletePaymentDisbursedEvent(log: ethers.Event) {
+		const event = new PaymentDisbursed(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "athletePaymentDisbursed", this.db);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
 		if (result.status === undefined) {
 			const errorData = {
-				"error": "Error in NILCoinFaucetListeners._handleTokenFaucetSaleEvent",
+				"error": "Error in AthletePaymentDisbursed.saveData",
 				"result": result.response.data,
 				"endpoint": endpoint,
 				"txHash": log.transactionHash,
@@ -86,11 +85,12 @@ export class NILCoinFaucetListeners {
 			await saveError(errorData, this.db);
 		}
 	}
+
 }
 
-export class NILCoinFaucetListenersFactory {
-	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): NILCoinFaucetListeners {
-		const itemToReturn = new NILCoinFaucetListeners(chainId, eventsDirectory, db);
+export class AthletePaymentManagerListenersFactory {
+	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): AthletePaymentManagerListeners {
+		const itemToReturn = new AthletePaymentManagerListeners(chainId, eventsDirectory, db);
 		itemToReturn.startListeners();
 		return itemToReturn;
 	}

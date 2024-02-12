@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
+import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
 	"event DraftControllerAdded(uint16  _year, address  _address, bool  _isFootball)",
@@ -59,13 +60,43 @@ export class DirectoryListeners {
 	async _handleDraftControllerAddedEvent(log: ethers.Event) {
 		const event = new DraftControllerAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftControllerAdded", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in DirectoryListeners._handleDraftControllerAddedEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 
 	async _handleRingSeriesTokenContractAddedEvent(log: ethers.Event) {
 		const event = new RingSeriesTokenContractAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "ringSeriesTokenContractAdded", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in DirectoryListeners._handleRingSeriesTokenContractAddedEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
+		
+		
+		
+		
 		const dataToSave = {
 			address: event.address,
 			lastBlockPolled: log.blockNumber
@@ -76,12 +107,38 @@ export class DirectoryListeners {
 	async _handleCollectibleSeriesFaucetContractAddedEvent(log: ethers.Event) {
 		const event = new CollectibleSeriesFaucetContractAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleSeriesFaucetContractAdded", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in DirectoryListeners._handleCollectibleSeriesFaucetContractAddedEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 	async _handleCollectibleSeriesTokenContractAddedEvent(log: ethers.Event) {
 		const event = new CollectibleSeriesTokenContractAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleSeriesTokenContractAdded", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in _handleCollectibleSeriesTokenContractAddedEvent.saveData",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 		const dataToSave = {
 			address: event.address,
 			lastBlockPolled: log.blockNumber

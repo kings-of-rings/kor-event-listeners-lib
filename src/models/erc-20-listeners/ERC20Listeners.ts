@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
 import { getEthersProvider } from '../../utils/getEthersProvider';
+import { saveError } from "../../utils/saveError";
 const EVENTS_ABI = [
 	"event Transfer(address from, address to, uint256 value)"
 ];
@@ -59,7 +60,20 @@ export class ERC20Listeners {
 	_handleTransferEvent = async (log: ethers.Event) => {
 		const event = new Erc20Transfer(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "erc20Transfer", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in ERC20Listeners._handleTransferEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 
 }

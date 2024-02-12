@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
+import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
 	"event DraftPickClaimed(address  _claimingAddress,uint256  _tokenId,uint256  _draftBidId,uint256 _year,bool _isFootball)",
@@ -70,39 +71,130 @@ export class DraftControllerListeners {
 	async _handleDraftPickClaimedEvent(log: ethers.Event) {
 		const event = new DraftPickClaimed(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftPickClaimed", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in DraftPickClaimed.saveData",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 
 	async _handleDraftResultsFinalizedEvent(log: ethers.Event) {
 		const event = new DraftResultsFinalized(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftResultsFinalized", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in DraftResultsFinalized.saveData",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 
 	async _handleDraftTimeSetEvent(log: ethers.Event) {
 		const event = new DraftTimeSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftTimeSet", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in DraftTimeSet.saveData",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 	async _handleDraftStakeClaimedEvent(log: ethers.Event) {
 		const event = new DraftStakeClaimed(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftStakeClaimed", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in DraftStakeClaimed.saveData",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 	async _handleDraftBidPlacedEvent(log: ethers.Event) {
 		const event = new DraftBidPlaced(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftBidPlaced", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in DraftBidPlaced.saveData",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 	async _handleDraftBidIncreasedEvent(log: ethers.Event) {
 		const event = new DraftBidIncreased(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftBidIncreased", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
-	}
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in DraftBidIncreased.saveData",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
+}
 	async _handleClaimingRequirementsSetEvent(log: ethers.Event) {
 		const event = new ClaimingRequirementsSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "claimingRequirementsSet", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in ClaimingRequirementsSet.saveData",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 }
 

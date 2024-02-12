@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
+import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
 	"event BurnBidIncreased(uint256 _bidId,address _bidder,uint256 _tokenId,uint256 _increasedAmount,uint256 _totalBid, uint16 _year,bool _isFootball)",
@@ -55,17 +56,56 @@ export class CollegeBurnAuctionListener {
 	async _handleBurnBidPlacedEvent(log: ethers.Event) {
 		const event = new BurnBidPlaced(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnBidPlaced", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
-	}
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in BurnBidPlaced.saveData",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
+}
 	async _handleBurnBidIncreasedEvent(log: ethers.Event) {
 		const event = new BurnBidIncreased(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnBidIncreased", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
-	}
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in BurnBidIncreased.saveData",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
+}
 	async _handleBurnAuctionTimeSetEvent(log: ethers.Event) {
 		const event = new BurnAuctionTimeSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnAuctionTimeSet", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in BurnAuctionTimeSet.saveData", 
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 	async _handleRemoveBidEvent(log: ethers.Event) {
 		//console.log("Event", log);

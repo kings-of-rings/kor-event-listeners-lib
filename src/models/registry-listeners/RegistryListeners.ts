@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { AthletePaymentManagerListeners, AthletePaymentManagerListenersFactory } from "./contracts/AthletePaymentManagerListeners";
 import { AthleteRegistryListeners, AthleteRegistryListenersFactory } from "./contracts/AthleteRegistryListeners";
 import { CollegeRegistryListeners, CollegeRegistryListenersFactory } from "./contracts/CollegeRegistryListeners";
 import { DirectoryListeners, DirectoryListenersFactory } from "./contracts/DirectoryListeners";
@@ -13,6 +14,7 @@ export class RegistryListeners {
 	directory: DirectoryListeners;
 	highSchoolRegistry: HighSchoolRegistryListeners;
 	proRegistry: ProRegistryListeners;
+	paymentManager: AthletePaymentManagerListeners;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
@@ -25,6 +27,7 @@ export class RegistryListeners {
 		this.directory = DirectoryListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
 		this.highSchoolRegistry = HighSchoolRegistryListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
 		this.proRegistry = ProRegistryListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
+		this.paymentManager = AthletePaymentManagerListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
 	}
 }
 

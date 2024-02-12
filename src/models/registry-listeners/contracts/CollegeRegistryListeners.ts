@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
+import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
 	"event CollegeAdded(uint256 _collegeId,string _name,string _conference,string _mascot, uint16 _tier, uint16 _royalty)",
@@ -55,19 +56,58 @@ export class CollegeRegistryListeners {
 	async _handleCollegeAddedEvent(log: ethers.Event) {
 		const event = new CollegeAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeAdded", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in CollegeRegistryListeners._handleCollegeAddedEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 
 	async _handleCollegeChangedEvent(log: ethers.Event) {
 		const event = new CollegeChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeChanged", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in CollegeRegistryListeners._handleCollegeChangedEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 
 	async _handleTierChangedEvent(log: ethers.Event) {
 		const event = new TierChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeTierChanged", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in CollegeRegistryListeners._handleTierChangedEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 
 }

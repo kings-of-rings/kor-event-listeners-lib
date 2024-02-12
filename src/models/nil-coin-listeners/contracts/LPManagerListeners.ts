@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
+import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
 	"event NilAddLiquidityProcedure(uint256 _id, uint256 _stableLpAmount, uint256 _nilAmountBurned)"
@@ -49,7 +50,20 @@ export class LPManagerListeners {
 	async _handleNilAddLiquidityProcedureEvent(log: ethers.Event) {
 		const event = new NilAddLiquidityProcedure(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "nilLiquidityProcedure", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in LPManagerListeners._handleNilAddLiquidityProcedureEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 	}
 }
 

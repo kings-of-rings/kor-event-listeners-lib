@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
+import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
 	"event TokenDataSet(uint256  _tokenId,uint256  _round,uint256  _slot,uint256 _startTs,string _uri,uint16 _year,bool _isFootball)"
@@ -50,7 +51,20 @@ export class DraftPickNFTListeners {
 	async _handleTokenDataSetEvent(log: ethers.Event) {
 		const event = new TokenDataSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftPickTokenDataSet", this.db);
-		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
+		const result: any = await event.saveData(endpoint, apiKey);
+		if (result.status === undefined) {
+			const errorData = {
+				"error": "Error in DraftPickNFTListeners._handleTokenDataSetEvent",
+				"result": result.response.data,
+				"endpoint": endpoint,
+				"txHash": log.transactionHash,
+				"blockNumber": log.blockNumber,
+				"chainId": this.chainId,
+				"contractAddress": log.address,
+			}
+			await saveError(errorData, this.db);
+		}
 
 	}
 }
