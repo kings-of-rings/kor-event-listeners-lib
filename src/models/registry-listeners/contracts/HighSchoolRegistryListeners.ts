@@ -54,6 +54,7 @@ export class HighSchoolRegistryListeners {
 
 	async _handleHighSchoolChangedEvent(log: ethers.EventLog) {
 		console.log("HighSchoolChanged event received");
+		console.log("eventlog ", log);
 		const event = new HighSchoolChanged(log, this.chainId);
 		console.log("HighSchoolChanged event ", event);
 		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolChanged", this.db);
