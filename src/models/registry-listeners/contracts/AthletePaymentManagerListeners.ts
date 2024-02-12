@@ -24,7 +24,8 @@ export class AthletePaymentManagerListeners {
 		this.eventsDirectory = eventsDirectory;
 		this.db = db;
 		// Bind this to the event handlers
-
+		this._handleAthletePaymentReceivedEvent = this._handleAthletePaymentReceivedEvent.bind(this);
+		this._handleAthletePaymentDisbursedEvent = this._handleAthletePaymentDisbursedEvent.bind(this);
 	};
 
 	async startListeners() {
