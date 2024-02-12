@@ -54,7 +54,7 @@ export class ERC1155Listeners {
 	}
 	_setContractListener(contractAddress: string) {
 		const contract = new ethers.Contract(contractAddress, EVENTS_ABI, this.ethersProvider);
-		contract.on(contract.filters.TransferSingle(), this._handleTransferSingleEvent);
+		contract.on(contract.filters.TransferSingle(), (operator, from, to, id, value, eventObject)=> this._handleTransferSingleEvent(eventObject));
 	}
 
 	_handleTransferSingleEvent = async (log: ethers.Event) => {

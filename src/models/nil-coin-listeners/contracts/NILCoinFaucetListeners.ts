@@ -42,8 +42,8 @@ export class NILCoinFaucetListeners {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.FaucetTargetPrice(), this._handleFaucetTargetPriceEvent);
-						this.contract.on(this.contract.filters.TokenFaucetSale(), this._handleTokenFaucetSaleEvent);
+						this.contract.on(this.contract.filters.FaucetTargetPrice(), (_price, eventObject) => this._handleFaucetTargetPriceEvent(eventObject));
+						this.contract.on(this.contract.filters.TokenFaucetSale(), (_saleId, _buyer, _qty, _totalCost, eventObject) => this._handleTokenFaucetSaleEvent(eventObject));
 					}
 				}
 			});

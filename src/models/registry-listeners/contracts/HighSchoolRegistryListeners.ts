@@ -43,15 +43,15 @@ export class HighSchoolRegistryListeners {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.NewHighSchoolAdded(), this._handleHighSchoolAddedEvent);
-						this.contract.on(this.contract.filters.HighSchoolChanged(), this._handleHighSchoolChangedEvent);
+						this.contract.on(this.contract.filters.NewHighSchoolAdded(), (_highSchoolId, _name, _state, _city, _mascot, eventObject) => this._handleHighSchoolAddedEvent(eventObject));
+						this.contract.on(this.contract.filters.HighSchoolChanged(), (_highSchoolId, _name, _state, _city, _mascot, eventObject) => this._handleHighSchoolChangedEvent(eventObject));
 					}
 				}
 			});
 	}
 
 
-	async _handleHighSchoolAddedEvent(highSchoolId: BigNumber, name: string, state: string, city: string, mascot: string, eventObject: any) {
+	async _handleHighSchoolAddedEvent(eventObject: ethers.Event) {
 		const event = new HighSchoolAdded(eventObject, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolAdded", this.db);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
@@ -71,7 +71,7 @@ export class HighSchoolRegistryListeners {
 		}
 	}
 
-	async _handleHighSchoolChangedEvent(highSchoolId: BigNumber, name: string, state: string, city: string, mascot: string, eventObject: any) {
+	async _handleHighSchoolChangedEvent(eventObject: ethers.Event) {
 		const event = new HighSchoolChanged(eventObject, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolChanged", this.db);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";

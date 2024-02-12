@@ -55,13 +55,13 @@ export class DraftControllerListeners {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.DraftPickClaimed(), this._handleDraftPickClaimedEvent);
-						this.contract.on(this.contract.filters.DraftResultsFinalized(), this._handleDraftResultsFinalizedEvent);
-						this.contract.on(this.contract.filters.DraftTimeSet(), this._handleDraftTimeSetEvent);
-						this.contract.on(this.contract.filters.DraftStakeClaimed(), this._handleDraftStakeClaimedEvent);
-						this.contract.on(this.contract.filters.DraftBidPlaced(), this._handleDraftBidPlacedEvent);
-						this.contract.on(this.contract.filters.DraftBidIncreased(), this._handleDraftBidIncreasedEvent);
-						this.contract.on(this.contract.filters.ClaimingRequirementsSet(), this._handleClaimingRequirementsSetEvent);
+						this.contract.on(this.contract.filters.DraftPickClaimed(), ( _claimingAddress,  _tokenId,  _draftBidId, _year, _isFootball, eventObject)=> this._handleDraftPickClaimedEvent(eventObject));
+						this.contract.on(this.contract.filters.DraftResultsFinalized(), (_resultsFinal, _year, _isFootball, eventObject) => this._handleDraftResultsFinalizedEvent(eventObject));
+						this.contract.on(this.contract.filters.DraftTimeSet(), (_startTs, _endTs, _year, _isFootball, eventObject) => this._handleDraftTimeSetEvent(eventObject));
+						this.contract.on(this.contract.filters.DraftStakeClaimed(), ( _bidId,  _year,  _claimingAddress, _amount, _isFootball, eventObject) => this._handleDraftStakeClaimedEvent(eventObject));
+						this.contract.on(this.contract.filters.DraftBidPlaced(), ( _bidId,  _bidder,  _duration, _amount, _points, _year, _isFootball, eventObject) => this._handleDraftBidPlacedEvent(eventObject));
+						this.contract.on(this.contract.filters.DraftBidIncreased(), ( _bidId,  _bidder,  _duration, _amountAdded, _points, _year, _isFootball, eventObject) => this._handleDraftBidIncreasedEvent(eventObject));
+						this.contract.on(this.contract.filters.ClaimingRequirementsSet(), ( _tokenId,  _year,  _isFootball, _amount, eventObject) => this._handleClaimingRequirementsSetEvent(eventObject));
 					}
 				}
 			});

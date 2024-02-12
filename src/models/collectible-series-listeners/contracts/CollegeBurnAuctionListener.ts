@@ -44,10 +44,10 @@ export class CollegeBurnAuctionListener {
 					this.rpcUrl = data.rpcUrl;
 					this.ethersProvider = getEthersProvider(this.rpcUrl);
 					this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-					this.contract.on(this.contract.filters.BurnBidPlaced(), this._handleBurnBidPlacedEvent);
-					this.contract.on(this.contract.filters.BurnBidIncreased(), this._handleBurnBidIncreasedEvent);
-					this.contract.on(this.contract.filters.BurnAuctionTimeSet(), this._handleBurnAuctionTimeSetEvent);
-					this.contract.on(this.contract.filters.RemoveBid(), this._handleRemoveBidEvent);
+					this.contract.on(this.contract.filters.BurnBidPlaced(), (_bidId, _bidder, _tokenId, _increasedAmount, _totalBid, _year, _isFootball, eventObject) => this._handleBurnBidPlacedEvent(eventObject));
+					this.contract.on(this.contract.filters.BurnBidIncreased(), (_bidId, _bidder, _tokenId, _bidAmount, _bidCount, _year, _isFootball, eventObject) => this._handleBurnBidIncreasedEvent(eventObject));
+					this.contract.on(this.contract.filters.BurnAuctionTimeSet(), (_year, _isFootball, _start, _end, eventObject) => this._handleBurnAuctionTimeSetEvent(eventObject));
+					this.contract.on(this.contract.filters.RemoveBid(), (_bidId, _bidder, _tokenId, _bidAmount, _year, _isFootball, eventObject) => this._handleRemoveBidEvent(eventObject));
 				}
 			});
 	}

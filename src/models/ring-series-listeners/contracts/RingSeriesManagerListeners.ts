@@ -43,9 +43,9 @@ export class RingSeriesManagerListeners {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.AthleteRingSeriesQtySet(), this._handleAthleteRingSeriesQtySetEvent);
-						this.contract.on(this.contract.filters.AthleteRingSeriesEligibilitySet(), this._handleAthleteRingSeriesEligibilitySetEvent);
-						this.contract.on(this.contract.filters.RingSeriesYearAdded(), this._handleRingSeriesYearAddedEvent);
+						this.contract.on(this.contract.filters.AthleteRingSeriesQtySet(), (_athleteId, _maxQty, _athleteQty, eventObject) => this._handleAthleteRingSeriesQtySetEvent(eventObject));
+						this.contract.on(this.contract.filters.AthleteRingSeriesEligibilitySet(), (_athleteId, _isEligible, eventObject) => this._handleAthleteRingSeriesEligibilitySetEvent(eventObject));
+						this.contract.on(this.contract.filters.RingSeriesYearAdded(), (_athleteId, _year, eventObject) => this._handleRingSeriesYearAddedEvent(eventObject));
 					}
 				}
 			});

@@ -40,7 +40,7 @@ export class ProRingSeriesListeners {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.TokenUriSet(), this._handleTokenUriSetEvent);
+						this.contract.on(this.contract.filters.TokenUriSet(), (_tokenId, _uri, eventObject)=> this._handleTokenUriSetEvent(eventObject));
 					}
 				}
 			});

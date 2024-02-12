@@ -42,8 +42,8 @@ export class ProRegistryListeners {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.TeamAdded(), this._handleTeamAddedEvent);
-						this.contract.on(this.contract.filters.TeamChanged(), this._handleTeamChangedEvent);
+						this.contract.on(this.contract.filters.TeamAdded(), (_teamId, _name, _mascot, _conference, _isFootball, eventObject) => this._handleTeamAddedEvent(eventObject));
+						this.contract.on(this.contract.filters.TeamChanged(), (_teamId, _name, _mascot, _conference, _isFootball, eventObject) => this._handleTeamChangedEvent(eventObject));
 					}
 				}
 			});

@@ -30,7 +30,7 @@ export class DirectoryListeners {
 		this._handleRingSeriesTokenContractAddedEvent = this._handleRingSeriesTokenContractAddedEvent.bind(this);
 		this._handleCollectibleSeriesFaucetContractAddedEvent = this._handleCollectibleSeriesFaucetContractAddedEvent.bind(this);
 		this._handleCollectibleSeriesTokenContractAddedEvent = this._handleCollectibleSeriesTokenContractAddedEvent.bind(this);
-		
+
 	};
 
 	async startListeners() {
@@ -47,10 +47,10 @@ export class DirectoryListeners {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.DraftControllerAdded(), this._handleDraftControllerAddedEvent);
-						this.contract.on(this.contract.filters.RingSeriesTokenContractAdded(), this._handleRingSeriesTokenContractAddedEvent);
-						this.contract.on(this.contract.filters.CollectibleSeriesFaucetContractAdded(), this._handleCollectibleSeriesFaucetContractAddedEvent);
-						this.contract.on(this.contract.filters.CollectibleSeriesTokenContractAdded(), this._handleCollectibleSeriesTokenContractAddedEvent);
+						this.contract.on(this.contract.filters.DraftControllerAdded(), (_year, _address, _isFootball, eventObject) => this._handleDraftControllerAddedEvent(eventObject));
+						this.contract.on(this.contract.filters.RingSeriesTokenContractAdded(), (_year, address, eventObject) => this._handleRingSeriesTokenContractAddedEvent(eventObject));
+						this.contract.on(this.contract.filters.CollectibleSeriesFaucetContractAdded(), (_year, _address, _isFootball, eventObject) => this._handleCollectibleSeriesFaucetContractAddedEvent(eventObject));
+						this.contract.on(this.contract.filters.CollectibleSeriesTokenContractAdded(), (_year, _address, eventObject) => this._handleCollectibleSeriesTokenContractAddedEvent(eventObject));
 					}
 				}
 			});

@@ -46,11 +46,11 @@ export class CollectibleSeriesFaucetListener {
 					this.rpcUrl = data.rpcUrl;
 					this.ethersProvider = getEthersProvider(this.rpcUrl);
 					this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-					this.contract.on(this.contract.filters.AccessCreditsAddress(), this._handleAccessCreditsAddressEvent);
-					this.contract.on(this.contract.filters.AthletePriceSet(), this._handleAthletePriceSetEvent);
-					this.contract.on(this.contract.filters.CollectibleFaucetTimeSet(), this._handleCollectibleFaucetTimeSetEvent);
-					this.contract.on(this.contract.filters.LevelAdded(), this._handleLevelAddedEvent);
-					this.contract.on(this.contract.filters.CollectibleFaucetSale(), this._handleCollectibleFaucetSaleEvent);
+					this.contract.on(this.contract.filters.AccessCreditsAddress(), (_year, _isFootball, _address, eventObject) => this._handleAccessCreditsAddressEvent(eventObject));
+					this.contract.on(this.contract.filters.AthletePriceSet(), (_athleteId, _year, _price, eventObject) => this._handleAthletePriceSetEvent(eventObject));
+					this.contract.on(this.contract.filters.CollectibleFaucetTimeSet(), (_open, _freeAgency, _close, _year, _isFootball, eventObject) => this._handleCollectibleFaucetTimeSetEvent(eventObject));
+					this.contract.on(this.contract.filters.LevelAdded(), (_level, _levelEnds, _qtyAllowed, _increasePercentage, _year, _isFootball, eventObject) => this._handleLevelAddedEvent(eventObject));
+					this.contract.on(this.contract.filters.CollectibleFaucetSale(), (_saleId, _athleteId, _buyer, _qty, _totalCost, _year, _isFootball, eventObject) => this._handleCollectibleFaucetSaleEvent(eventObject));
 				}
 			});
 	}

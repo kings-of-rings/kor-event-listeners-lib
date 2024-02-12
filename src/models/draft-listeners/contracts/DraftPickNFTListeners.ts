@@ -41,7 +41,7 @@ export class DraftPickNFTListeners {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.TokenDataSet(), this._handleTokenDataSetEvent);
+						this.contract.on(this.contract.filters.TokenDataSet(), (_tokenId, _round, _slot, _startTs, _uri, _year, _isFootball, eventObject) => this._handleTokenDataSetEvent(eventObject));
 					}
 				}
 			});

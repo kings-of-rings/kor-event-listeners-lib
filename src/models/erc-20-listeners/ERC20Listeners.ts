@@ -1,6 +1,7 @@
 import { Erc20Transfer } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { event } from "firebase-functions/v1/analytics";
 import { getEndpoint } from "../../utils/getEndpoint";
 import { getEthersProvider } from '../../utils/getEthersProvider';
 const EVENTS_ABI = [
@@ -54,7 +55,7 @@ export class ERC20Listeners {
 	}
 	_setContractListener(contractAddress: string) {
 		const contract = new ethers.Contract(contractAddress, EVENTS_ABI, this.ethersProvider);
-		contract.on(contract.filters.Transfer(), this._handleTransferEvent);
+		contract.on(contract.filters.Transfer(), (from, to, value, eventObject) => this._handleTransferEvent(eventObject));
 	}
 	_handleTransferEvent = async (log: ethers.Event) => {
 		const event = new Erc20Transfer(log, this.chainId);

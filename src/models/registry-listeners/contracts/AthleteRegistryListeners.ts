@@ -53,13 +53,13 @@ export class AthleteRegistryListeners {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.ActiveYearAdded(), this._handleActiveYearAddedEvent);
-						this.contract.on(this.contract.filters.IsSignedChanged(), this._handleIsSignedChangedEvent);
-						this.contract.on(this.contract.filters.AthleteAdded(), this._handleAthleteAddedEvent);
-						this.contract.on(this.contract.filters.AthleteNameChanged(), this._handleAthleteNameChangedEvent);
-						this.contract.on(this.contract.filters.AthleteCollegeChanged(), this._handleAthleteCollegeChangedEvent);
-						this.contract.on(this.contract.filters.AthleteHighSchoolChanged(), this._handleAthleteHighSchoolChangedEvent);
-						this.contract.on(this.contract.filters.AthleteProTeamChanged(), this._handleAthleteProTeamChangedEvent);
+						this.contract.on(this.contract.filters.ActiveYearAdded(), (_athleteId, _year, eventObject) => this._handleActiveYearAddedEvent(eventObject));
+						this.contract.on(this.contract.filters.IsSignedChanged(), (_athleteId, _isSigned, eventObject) => this._handleIsSignedChangedEvent(eventObject));
+						this.contract.on(this.contract.filters.AthleteAdded(), (_athleteId, _isFootball, _displayName, _lastName, _middleName, _firstName, eventObject) => this._handleAthleteAddedEvent(eventObject));
+						this.contract.on(this.contract.filters.AthleteNameChanged(), (_athleteId, _displayName, _lastName, _middleName, _firstName, eventObject) => this._handleAthleteNameChangedEvent(eventObject));
+						this.contract.on(this.contract.filters.AthleteCollegeChanged(), (_athleteId, _collegeId, _jerseyNumber, _position, eventObject) => this._handleAthleteCollegeChangedEvent(eventObject));
+						this.contract.on(this.contract.filters.AthleteHighSchoolChanged(), (_athleteId, _highSchoolId, _jerseyNumber, _position, _year, eventObject) => this._handleAthleteHighSchoolChangedEvent(eventObject));
+						this.contract.on(this.contract.filters.AthleteProTeamChanged(), (_athleteId, _proTeamId, _jerseyNumber, _position, eventObject) => this._handleAthleteProTeamChangedEvent(eventObject));
 					}
 				}
 			});

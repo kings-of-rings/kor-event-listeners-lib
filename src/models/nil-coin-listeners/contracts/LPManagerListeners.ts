@@ -40,7 +40,7 @@ export class LPManagerListeners {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.NilAddLiquidityProcedure(), this._handleNilAddLiquidityProcedureEvent);
+						this.contract.on(this.contract.filters.NilAddLiquidityProcedure(), (_id, _stableLpAmount, _nilAmountBurned, eventObject)=> this._handleNilAddLiquidityProcedureEvent(eventObject));
 					}
 				}
 			});
