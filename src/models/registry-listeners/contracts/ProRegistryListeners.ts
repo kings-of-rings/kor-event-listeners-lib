@@ -1,5 +1,7 @@
+import { ProTeamAdded, ProTeamChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 
 const EVENTS_ABI = [
@@ -14,6 +16,7 @@ export class ProRegistryListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
@@ -21,11 +24,12 @@ export class ProRegistryListeners {
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this._setListeners(db);
+		this.db = db;
+		this._setListeners();
 	}
 
-	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("registry")
+	_setListeners() {
+		this.db.collection(this.eventsDirectory).doc("registry")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
@@ -41,13 +45,16 @@ export class ProRegistryListeners {
 			});
 	}
 
-	_handleTeamAddedEvent(log: ethers.EventLog) {
-		console.log("High School Added", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleTeamAddedEvent(log: ethers.EventLog) {
+		const event = new ProTeamAdded(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamAdded", this.db);		
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	_handleTeamChangedEvent(log: ethers.EventLog) {
-		console.log("High School Changed", log);
+	async _handleTeamChangedEvent(log: ethers.EventLog) {
+		const event = new ProTeamChanged(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamChanged", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
 }

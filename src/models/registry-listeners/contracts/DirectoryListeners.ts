@@ -1,5 +1,7 @@
+import { CollectibleSeriesFaucetContractAdded, CollectibleSeriesTokenContractAdded, DraftControllerAdded, RingSeriesTokenContractAdded } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 
 const EVENTS_ABI = [
@@ -16,6 +18,7 @@ export class DirectoryListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
@@ -23,40 +26,61 @@ export class DirectoryListeners {
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this._setListeners(db);
+		this.db = db;
+		this._setListeners();
 	}
 
-	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("registry")
+	_setListeners() {
+		this.db.collection(this.eventsDirectory).doc("registry")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
 					this.contractAddress = data.directory;
 					if (this.contractAddress?.length > 0) {
-					this.rpcUrl = data.rpcUrl;
-					this.ethersProvider = getEthersProvider(this.rpcUrl);
-					this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-					this.contract.on(this.contract.filters.DraftControllerAdded(), this._handleDraftControllerAddedEvent);
-					this.contract.on(this.contract.filters.RingSeriesTokenContractAdded(), this._handleRingSeriesTokenContractAddedEvent);
-					this.contract.on(this.contract.filters.CollectibleSeriesFaucetContractAdded(), this._handleCollectibleSeriesFaucetContractAddedEvent);
-					this.contract.on(this.contract.filters.CollectibleSeriesTokenContractAdded(), this._handleCollectibleSeriesTokenContractAddedEvent);
-				}}
+						this.rpcUrl = data.rpcUrl;
+						this.ethersProvider = getEthersProvider(this.rpcUrl);
+						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
+						this.contract.on(this.contract.filters.DraftControllerAdded(), this._handleDraftControllerAddedEvent);
+						this.contract.on(this.contract.filters.RingSeriesTokenContractAdded(), this._handleRingSeriesTokenContractAddedEvent);
+						this.contract.on(this.contract.filters.CollectibleSeriesFaucetContractAdded(), this._handleCollectibleSeriesFaucetContractAddedEvent);
+						this.contract.on(this.contract.filters.CollectibleSeriesTokenContractAdded(), this._handleCollectibleSeriesTokenContractAddedEvent);
+					}
+				}
 			});
 	}
 
-	_handleDraftControllerAddedEvent(log: ethers.EventLog) {
-		console.log("Event ", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleDraftControllerAddedEvent(log: ethers.EventLog) {
+		const event = new DraftControllerAdded(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "draftControllerAdded", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
 
-	_handleRingSeriesTokenContractAddedEvent(log: ethers.EventLog) {
-		console.log("Event ", log);
+	async _handleRingSeriesTokenContractAddedEvent(log: ethers.EventLog) {
+		const event = new RingSeriesTokenContractAdded(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "ringSeriesTokenContractAdded", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const dataToSave = {
+			address: event.address,
+			lastBlockPolled: log.blockNumber
+		}
+		const ref = this.db.collection(this.eventsDirectory).doc("erc1155").collection('contracts').doc(event.address.toLowerCase());
+		await ref.set(dataToSave);
 	}
-	_handleCollectibleSeriesFaucetContractAddedEvent(log: ethers.EventLog) {
-		console.log("Event ", log);
+	async _handleCollectibleSeriesFaucetContractAddedEvent(log: ethers.EventLog) {
+		const event = new CollectibleSeriesFaucetContractAdded(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleSeriesFaucetContractAdded", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	_handleCollectibleSeriesTokenContractAddedEvent(log: ethers.EventLog) {
-		console.log("Event ", log);
+	async _handleCollectibleSeriesTokenContractAddedEvent(log: ethers.EventLog) {
+		const event = new CollectibleSeriesTokenContractAdded(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleSeriesTokenContractAdded", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
+		const dataToSave = {
+			address: event.address,
+			lastBlockPolled: log.blockNumber
+		}
+		const ref = this.db.collection(this.eventsDirectory).doc("erc1155").collection('contracts').doc(event.address.toLowerCase());
+		await ref.set(dataToSave);
 	}
 }
 

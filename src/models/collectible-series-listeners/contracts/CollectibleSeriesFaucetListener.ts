@@ -1,5 +1,7 @@
+import { AccessCreditsAddressSet, AthletePriceSet, CollectibleFaucetSale, CollectibleFaucetTimeSet, FaucetLevelAdded } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 
 const EVENTS_ABI = [
@@ -17,6 +19,7 @@ export class CollectibleSeriesFaucetListener {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
@@ -24,11 +27,12 @@ export class CollectibleSeriesFaucetListener {
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this._setListeners(db);
+		this.db = db;
+		this._setListeners();
 	}
 
-	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("collectible")
+	_setListeners() {
+		this.db.collection(this.eventsDirectory).doc("collectible")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data && data.collectibleFaucet && data?.collectibleFaucet?.length > 0) {
@@ -45,25 +49,30 @@ export class CollectibleSeriesFaucetListener {
 			});
 	}
 
-	_handleAccessCreditsAddressEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleAccessCreditsAddressEvent(log: ethers.EventLog) {
+		const event = new AccessCreditsAddressSet(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "accessCreditsAddress", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	_handleAthletePriceSetEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleAthletePriceSetEvent(log: ethers.EventLog) {
+		const event = new AthletePriceSet(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "athletePriceSet", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	_handleCollectibleFaucetTimeSetEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleCollectibleFaucetTimeSetEvent(log: ethers.EventLog) {
+		const event = new CollectibleFaucetTimeSet(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleFaucetTimeSet", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	_handleLevelAddedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleLevelAddedEvent(log: ethers.EventLog) {
+		const event = new FaucetLevelAdded(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "faucetLevelAdded", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	_handleCollectibleFaucetSaleEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleCollectibleFaucetSaleEvent(log: ethers.EventLog) {
+		const event = new CollectibleFaucetSale(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "faucetSale", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 }
 

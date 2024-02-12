@@ -1,5 +1,7 @@
+import { Erc20Transfer } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { getEndpoint } from "../../utils/getEndpoint";
 import { getEthersProvider } from '../../utils/getEthersProvider';
 const EVENTS_ABI = [
 	"event Transfer(address from, address to, uint256 tokenId)"
@@ -10,17 +12,19 @@ export class ERC721Listeners {
 	rpcUrl: string = "";
 	contractAddresses: string[] = [];
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	db?: admin.firestore.Firestore;
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this._setListeners(db);
+		this.db = db;
+		this._setListeners();
 	}
 
-	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("erc721")
+	_setListeners() {
+		this.db.collection(this.eventsDirectory).doc("erc721")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
@@ -52,7 +56,9 @@ export class ERC721Listeners {
 	}
 
 	_handleTransferEvent = async (log: ethers.Log) => {
-		console.log("Transfer event", log);
+		//const event = new Erc721Transfer(log, this.chainId);
+		//const endpoint = await getEndpoint(this.eventsDirectory, "erc721Transfer", this.db);
+		//event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
 }

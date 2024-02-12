@@ -1,5 +1,7 @@
+import { CollegeAdded, CollegeChanged, TierChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 
 const EVENTS_ABI = [
@@ -15,6 +17,7 @@ export class CollegeRegistryListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
@@ -22,37 +25,44 @@ export class CollegeRegistryListeners {
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this._setListeners(db);
+		this.db = db;
+		this._setListeners();
 	}
 
-	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("registry")
+	_setListeners() {
+		this.db.collection(this.eventsDirectory).doc("registry")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
 					this.contractAddress = data.college;
 					if (this.contractAddress?.length > 0) {
-					this.rpcUrl = data.rpcUrl;
-					this.ethersProvider = getEthersProvider(this.rpcUrl);
-					this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-					this.contract.on(this.contract.filters.CollegeAdded(), this._handleCollegeAddedEvent);
-					this.contract.on(this.contract.filters.CollegeChanged(), this._handleCollegeChangedEvent);
-					this.contract.on(this.contract.filters.TierChanged(), this._handleCollegeChangedEvent);
-				}}
+						this.rpcUrl = data.rpcUrl;
+						this.ethersProvider = getEthersProvider(this.rpcUrl);
+						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
+						this.contract.on(this.contract.filters.CollegeAdded(), this._handleCollegeAddedEvent);
+						this.contract.on(this.contract.filters.CollegeChanged(), this._handleCollegeChangedEvent);
+						this.contract.on(this.contract.filters.TierChanged(), this._handleCollegeChangedEvent);
+					}
+				}
 			});
 	}
 
-	_handleCollegeAddedEvent(log: ethers.EventLog) {
-		console.log(" Added", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleCollegeAddedEvent(log: ethers.EventLog) {
+		const event = new CollegeAdded(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "collegeAdded", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	_handleCollegeChangedEvent(log: ethers.EventLog) {
-		console.log("Changed", log);
+	async _handleCollegeChangedEvent(log: ethers.EventLog) {
+		const event = new CollegeChanged(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "collegeChanged", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	_handleTierChangedEvent(log: ethers.EventLog) {
-		console.log("Tier Changed", log);
+	async _handleTierChangedEvent(log: ethers.EventLog) {
+		const event = new TierChanged(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "collegeTierChanged", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
 }

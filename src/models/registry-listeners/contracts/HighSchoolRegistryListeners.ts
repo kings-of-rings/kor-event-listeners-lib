@@ -1,5 +1,7 @@
+import { HighSchoolAdded, HighSchoolChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 
 const EVENTS_ABI = [
@@ -14,6 +16,7 @@ export class HighSchoolRegistryListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
@@ -21,32 +24,37 @@ export class HighSchoolRegistryListeners {
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this._setListeners(db);
+		this.db = db;
+		this._setListeners();
 	}
 
-	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("registry")
+	_setListeners() {
+		this.db.collection(this.eventsDirectory).doc("registry")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
 					this.contractAddress = data.highSchool;
 					if (this.contractAddress?.length > 0) {
-					this.rpcUrl = data.rpcUrl;
-					this.ethersProvider = getEthersProvider(this.rpcUrl);
-					this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-					this.contract.on(this.contract.filters.NewHighSchoolAdded(), this._handleHighSchoolAddedEvent);
-					this.contract.on(this.contract.filters.HighSchoolChanged(), this._handleHighSchoolChangedEvent);
-				}}
+						this.rpcUrl = data.rpcUrl;
+						this.ethersProvider = getEthersProvider(this.rpcUrl);
+						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
+						this.contract.on(this.contract.filters.NewHighSchoolAdded(), this._handleHighSchoolAddedEvent);
+						this.contract.on(this.contract.filters.HighSchoolChanged(), this._handleHighSchoolChangedEvent);
+					}
+				}
 			});
 	}
 
-	_handleHighSchoolAddedEvent(log: ethers.EventLog) {
-		console.log("High School Added", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleHighSchoolAddedEvent(log: ethers.EventLog) {
+		const event = new HighSchoolAdded(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolAdded", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	_handleHighSchoolChangedEvent(log: ethers.EventLog) {
-		console.log("High School Changed", log);
+	async _handleHighSchoolChangedEvent(log: ethers.EventLog) {
+		const event = new HighSchoolChanged(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolChanged", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
 }

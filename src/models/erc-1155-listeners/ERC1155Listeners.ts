@@ -1,5 +1,7 @@
+import { Erc1155TransferSingle } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { getEndpoint } from "../../utils/getEndpoint";
 import { getEthersProvider } from '../../utils/getEthersProvider';
 const EVENTS_ABI = [
 	"event TransferSingle(address operator, address from, address to, uint256 id, uint256 value)"
@@ -10,24 +12,26 @@ export class ERC1155Listeners {
 	rpcUrl: string = "";
 	contractAddresses: string[] = [];
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	db?: admin.firestore.Firestore;
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this._setListeners(db);
+		this.db = db;
+		this._setListeners();
 	}
 
-	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("erc1155")
+	_setListeners() {
+		this.db.collection(this.eventsDirectory).doc("erc1155")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
 					this.rpcUrl = data.rpcUrl;
 					this._setContractAddresses(data.contracts);
 					this.ethersProvider = getEthersProvider(this.rpcUrl);
-					this._setContractListeners(db);
+					this._setContractListeners(this.db);
 				}
 			});
 
@@ -52,7 +56,9 @@ export class ERC1155Listeners {
 	}
 
 	_handleTransferSingleEvent = async (log: ethers.Log) => {
-		console.log("TransferSingle event", log);
+		const event = new Erc1155TransferSingle(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "erc1155TransferSingle", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
 }

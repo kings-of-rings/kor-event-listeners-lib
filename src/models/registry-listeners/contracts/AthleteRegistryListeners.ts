@@ -1,5 +1,7 @@
+import { AthleteActiveYearAdded, AthleteAdded, AthleteCollegeChanged, AthleteHighSchoolChanged, AthleteIsSignedChanged, AthleteNameChanged, AthleteProTeamChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 
 const EVENTS_ABI = [
@@ -19,6 +21,7 @@ export class AthleteRegistryListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
@@ -26,71 +29,74 @@ export class AthleteRegistryListeners {
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this._setListeners(db);
+		this.db = db;
+		this._setListeners();
 	}
 
-	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("registry")
+	_setListeners() {
+		this.db.collection(this.eventsDirectory).doc("registry")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
 					console.log("AthleteRegistryListeners", data);
 					this.contractAddress = data.highSchool;
 					if (this.contractAddress?.length > 0) {
-					this.rpcUrl = data.rpcUrl;
-					this.ethersProvider = getEthersProvider(this.rpcUrl);
-					this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-					this.contract.on(this.contract.filters.ActiveYearAdded(), this._handleActiveYearAddedEvent);
-					this.contract.on(this.contract.filters.IsSignedChanged(), this._handleIsSignedChangedEvent);
-					this.contract.on(this.contract.filters.AthleteAdded(), this._handleAthleteAddedEvent);
-					this.contract.on(this.contract.filters.AthleteNameChanged(), this._handleAthleteNameChangedEvent);
-					this.contract.on(this.contract.filters.AthleteCollegeChanged(), this._handleAthleteCollegeChangedEvent);
-					this.contract.on(this.contract.filters.AthleteHighSchoolChanged(), this._handleAthleteHighSchoolChangedEvent);
-					this.contract.on(this.contract.filters.AthleteProTeamChanged(), this._handleAthleteProTeamChangedEvent);
-				}}
+						this.rpcUrl = data.rpcUrl;
+						this.ethersProvider = getEthersProvider(this.rpcUrl);
+						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
+						this.contract.on(this.contract.filters.ActiveYearAdded(), this._handleActiveYearAddedEvent);
+						this.contract.on(this.contract.filters.IsSignedChanged(), this._handleIsSignedChangedEvent);
+						this.contract.on(this.contract.filters.AthleteAdded(), this._handleAthleteAddedEvent);
+						this.contract.on(this.contract.filters.AthleteNameChanged(), this._handleAthleteNameChangedEvent);
+						this.contract.on(this.contract.filters.AthleteCollegeChanged(), this._handleAthleteCollegeChangedEvent);
+						this.contract.on(this.contract.filters.AthleteHighSchoolChanged(), this._handleAthleteHighSchoolChangedEvent);
+						this.contract.on(this.contract.filters.AthleteProTeamChanged(), this._handleAthleteProTeamChangedEvent);
+					}
+				}
 			});
 	}
 
-	_handleActiveYearAddedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleActiveYearAddedEvent(log: ethers.EventLog) {
+		const event = new AthleteActiveYearAdded(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "athleteActiveYearAdded", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	_handleIsSignedChangedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleIsSignedChangedEvent(log: ethers.EventLog) {
+		const event = new AthleteIsSignedChanged(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "athleteIsSignedChanged", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	_handleAthleteAddedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleAthleteAddedEvent(log: ethers.EventLog) {
+		const event = new AthleteAdded(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "athleteAdded", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	_handleAthleteNameChangedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleAthleteNameChangedEvent(log: ethers.EventLog) {
+		const event = new AthleteNameChanged(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "athleteNameChanged", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	_handleAthleteCollegeChangedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleAthleteCollegeChangedEvent(log: ethers.EventLog) {
+		const event = new AthleteCollegeChanged(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "athleteCollegeChanged", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	_handleAthleteHighSchoolChangedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleAthleteHighSchoolChangedEvent(log: ethers.EventLog) {
+		const event = new AthleteHighSchoolChanged(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "athleteHighSchoolChanged", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	_handleAthleteProTeamChangedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleAthleteProTeamChangedEvent(log: ethers.EventLog) {
+		const event = new AthleteProTeamChanged(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "athleteProTeamChanged", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-
-	_handleEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
-	}
-
 }
 
 export class AthleteRegistryListenersFactory {

@@ -1,5 +1,7 @@
+import { ClaimingRequirementsSet, DraftBidIncreased, DraftBidPlaced, DraftPickClaimed, DraftResultsFinalized, DraftStakeClaimed, DraftTimeSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 
 const EVENTS_ABI = [
@@ -20,6 +22,7 @@ export class DraftControllerListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string, isFootball: boolean) {
 		this.chainId = chainId;
@@ -28,11 +31,12 @@ export class DraftControllerListeners {
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this._setListeners(db);
+		this.db = db;
+		this._setListeners();
 	}
 
-	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("collectible")
+	_setListeners() {
+		this.db.collection(this.eventsDirectory).doc("collectible")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
@@ -53,29 +57,42 @@ export class DraftControllerListeners {
 			});
 	}
 
-	_handleDraftPickClaimedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleDraftPickClaimedEvent(log: ethers.EventLog) {
+		const event = new DraftPickClaimed(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "draftPickClaimed", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
 
-	_handleDraftResultsFinalizedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
+	async _handleDraftResultsFinalizedEvent(log: ethers.EventLog) {
+		const event = new DraftResultsFinalized(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "draftResultsFinalized", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
 
-	_handleDraftTimeSetEvent(log: ethers.EventLog) {
-		console.log("Event", log);
+	async _handleDraftTimeSetEvent(log: ethers.EventLog) {
+		const event = new DraftTimeSet(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "draftTimeSet", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-	_handleDraftStakeClaimedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
+	async _handleDraftStakeClaimedEvent(log: ethers.EventLog) {
+		const event = new DraftStakeClaimed(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "draftStakeClaimed", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	_handleDraftBidPlacedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
+	async _handleDraftBidPlacedEvent(log: ethers.EventLog) {
+		const event = new DraftBidPlaced(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "draftBidPlaced", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-	_handleDraftBidIncreasedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
+	async _handleDraftBidIncreasedEvent(log: ethers.EventLog) {
+		const event = new DraftBidIncreased(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "draftBidIncreased", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-	_handleClaimingRequirementsSetEvent(log: ethers.EventLog) {
-		console.log("Event", log);
+	async _handleClaimingRequirementsSetEvent(log: ethers.EventLog) {
+		const event = new ClaimingRequirementsSet(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "claimingRequirementsSet", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
 }
 

@@ -1,5 +1,7 @@
+import { TokenUriSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 
 const EVENTS_ABI = [
@@ -13,6 +15,7 @@ export class CollegeRingSeriesListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
@@ -20,28 +23,30 @@ export class CollegeRingSeriesListeners {
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this._setListeners(db);
+		this.db = db;
+		this._setListeners();
 	}
 
-	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("ring")
+	_setListeners() {
+		this.db.collection(this.eventsDirectory).doc("ring")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
-					this.contractAddress = data.college; 
+					this.contractAddress = data.college;
 					if (this?.contractAddress?.length > 0) {
-					this.rpcUrl = data.rpcUrl;
-					this.ethersProvider = getEthersProvider(this.rpcUrl);
-					this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
+						this.rpcUrl = data.rpcUrl;
+						this.ethersProvider = getEthersProvider(this.rpcUrl);
+						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.TokenUriSet(), this._handleTokenUriSetEvent);
 					}
 				}
 			});
 	}
 
-	_handleTokenUriSetEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleTokenUriSetEvent(log: ethers.EventLog) {
+		const event = new TokenUriSet(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "tokenUriSet", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 }
 

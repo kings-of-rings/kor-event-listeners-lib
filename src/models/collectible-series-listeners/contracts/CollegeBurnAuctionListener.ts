@@ -1,5 +1,7 @@
+import { BurnAuctionTimeSet, BurnBidIncreased, BurnBidPlaced } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 
 const EVENTS_ABI = [
@@ -16,6 +18,7 @@ export class CollegeBurnAuctionListener {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
@@ -23,11 +26,12 @@ export class CollegeBurnAuctionListener {
 	};
 
 	async startListeners(db: admin.firestore.Firestore) {
-		this._setListeners(db);
+		this.db = db;
+		this._setListeners();
 	}
 
-	_setListeners(db: admin.firestore.Firestore) {
-		db.collection(this.eventsDirectory).doc("collectible")
+	_setListeners() {
+		this.db.collection(this.eventsDirectory).doc("collectible")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				this.contractAddress = data.burnAuction;
@@ -43,21 +47,23 @@ export class CollegeBurnAuctionListener {
 			});
 	}
 
-	_handleBurnBidPlacedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleBurnBidPlacedEvent(log: ethers.EventLog) {
+		const event = new BurnBidPlaced(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "burnBidPlaced", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-	_handleBurnBidIncreasedEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleBurnBidIncreasedEvent(log: ethers.EventLog) {
+		const event = new BurnBidIncreased(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "burnBidIncreased", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-	_handleBurnAuctionTimeSetEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleBurnAuctionTimeSetEvent(log: ethers.EventLog) {
+		const event = new BurnAuctionTimeSet(log, this.chainId);
+		const endpoint = await getEndpoint(this.eventsDirectory, "burnAuctionTimeSet", this.db);
+		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	_handleRemoveBidEvent(log: ethers.EventLog) {
-		console.log("Event", log);
-		//await SaveShuffleRequestEventFactory.fromEthersEvent(this.chainId, log, db, this.ethersProvider);
+	async _handleRemoveBidEvent(log: ethers.EventLog) {
+		//console.log("Event", log);
 	}
 }
 
