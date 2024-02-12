@@ -52,8 +52,9 @@ export class HighSchoolRegistryListeners {
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleHighSchoolChangedEvent(log: ethers.EventLog) {
+	async _handleHighSchoolChangedEvent(log: any) {
 		console.log("HighSchoolChanged event received");
+		console.log("Type of log ", typeof log);
 		const event = new HighSchoolChanged(log, this.chainId);
 		console.log("HighSchoolChanged event ", event);
 		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolChanged", this.db);
