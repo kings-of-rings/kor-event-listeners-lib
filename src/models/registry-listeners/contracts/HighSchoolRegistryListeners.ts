@@ -1,12 +1,13 @@
 import { HighSchoolAdded, HighSchoolChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
+import console from "console";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 
 const EVENTS_ABI = [
-	"event NewHighSchoolAdded(uint256 _highSchoolId,string _name,string _state,string _city,string _mascot)",
-	"event HighSchoolChanged(uint256 _highSchoolId,string _name,string _state,string _city,string _mascot)"
+	"event NewHighSchoolAdded(uint256 indexed _highSchoolId,string indexed _name,string indexed _state,string _city,string _mascot)",
+	"event HighSchoolChanged(uint256 indexed _highSchoolId,string indexed _name,string indexed _state,string _city,string _mascot)"
 ];
 
 export class HighSchoolRegistryListeners {
@@ -45,15 +46,18 @@ export class HighSchoolRegistryListeners {
 			});
 	}
 
-	async _handleHighSchoolAddedEvent(log: ethers.EventLog) {
+	async _handleHighSchoolAddedEvent(log: ethers.EventLog) {		
 		const event = new HighSchoolAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
 	async _handleHighSchoolChangedEvent(log: ethers.EventLog) {
+		console.log("HighSchoolChanged event received");
 		const event = new HighSchoolChanged(log, this.chainId);
+		console.log("HighSchoolChanged event ", event);
 		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolChanged", this.db);
+		console.log("HighSchoolChanged event ", event);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
