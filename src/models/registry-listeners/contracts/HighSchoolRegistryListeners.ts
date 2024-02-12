@@ -16,7 +16,7 @@ export class HighSchoolRegistryListeners {
 	rpcUrl: string = "";
 	contractAddress: string = "";
 	contract?: ethers.Contract;
-	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	ethersProvider?: any;
 	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {
@@ -52,9 +52,9 @@ export class HighSchoolRegistryListeners {
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleHighSchoolChangedEvent(log: ethers.EventLog) {
+	async _handleHighSchoolChangedEvent(log: any) {
 		console.log("HighSchoolChanged event received");
-		console.log("eventlog ", log);
+		console.log("eventlog ", log.args);
 		const event = new HighSchoolChanged(log, this.chainId);
 		console.log("HighSchoolChanged event ", event);
 		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolChanged", this.db);
