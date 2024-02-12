@@ -1,6 +1,6 @@
 {
   "name": "@kings-of-rings/kor-event-listeners-lib",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "",
   "main": "lib/index.js",
   "publishConfig": {
@@ -17,7 +17,7 @@
   "author": "XDev",
   "license": "ISC",
   "dependencies": {
-    "@kings-of-rings/kor-contract-event-data-models": "^0.0.24",
+    "@kings-of-rings/kor-contract-event-data-models": "^0.0.26",
     "ethers": "^6.10.0",
     "firebase-admin": "^12.0.0"
   }

@@ -46,15 +46,16 @@ export class HighSchoolRegistryListeners {
 			});
 	}
 
-	async _handleHighSchoolAddedEvent(log: ethers.EventLog) {		
+	async _handleHighSchoolAddedEvent(log: ethers.Log) {		
 		const event = new HighSchoolAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleHighSchoolChangedEvent(log: any) {
+	async _handleHighSchoolChangedEvent(log: ethers.Log) {
 		console.log("HighSchoolChanged event received");
 		console.log("Type of log ", typeof log);
+		console.log("log ", log);
 		const event = new HighSchoolChanged(log, this.chainId);
 		console.log("HighSchoolChanged event ", event);
 		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolChanged", this.db);
