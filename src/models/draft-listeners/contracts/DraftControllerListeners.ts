@@ -22,16 +22,26 @@ export class DraftControllerListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
+	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string, isFootball: boolean) {
+	constructor(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
 		this.fieldName = isFootball ? "draftControllerFootball" : "draftControllerBasketball";
+
+		this.db = db;
+		// Bind this to the event handlers
+		this._handleDraftPickClaimedEvent = this._handleDraftPickClaimedEvent.bind(this);
+		this._handleDraftResultsFinalizedEvent = this._handleDraftResultsFinalizedEvent.bind(this);
+		this._handleDraftTimeSetEvent = this._handleDraftTimeSetEvent.bind(this);
+		this._handleDraftStakeClaimedEvent = this._handleDraftStakeClaimedEvent.bind(this);
+		this._handleDraftBidPlacedEvent = this._handleDraftBidPlacedEvent.bind(this);
+		this._handleDraftBidIncreasedEvent = this._handleDraftBidIncreasedEvent.bind(this);
+		this._handleClaimingRequirementsSetEvent = this._handleClaimingRequirementsSetEvent.bind(this);
+
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -57,39 +67,39 @@ export class DraftControllerListeners {
 			});
 	}
 
-	async _handleDraftPickClaimedEvent(log: ethers.EventLog) {
+	async _handleDraftPickClaimedEvent(log: ethers.Event) {
 		const event = new DraftPickClaimed(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftPickClaimed", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
 
-	async _handleDraftResultsFinalizedEvent(log: ethers.EventLog) {
+	async _handleDraftResultsFinalizedEvent(log: ethers.Event) {
 		const event = new DraftResultsFinalized(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftResultsFinalized", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
 
-	async _handleDraftTimeSetEvent(log: ethers.EventLog) {
+	async _handleDraftTimeSetEvent(log: ethers.Event) {
 		const event = new DraftTimeSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftTimeSet", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-	async _handleDraftStakeClaimedEvent(log: ethers.EventLog) {
+	async _handleDraftStakeClaimedEvent(log: ethers.Event) {
 		const event = new DraftStakeClaimed(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftStakeClaimed", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	async _handleDraftBidPlacedEvent(log: ethers.EventLog) {
+	async _handleDraftBidPlacedEvent(log: ethers.Event) {
 		const event = new DraftBidPlaced(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftBidPlaced", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-	async _handleDraftBidIncreasedEvent(log: ethers.EventLog) {
+	async _handleDraftBidIncreasedEvent(log: ethers.Event) {
 		const event = new DraftBidIncreased(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftBidIncreased", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-	async _handleClaimingRequirementsSetEvent(log: ethers.EventLog) {
+	async _handleClaimingRequirementsSetEvent(log: ethers.Event) {
 		const event = new ClaimingRequirementsSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "claimingRequirementsSet", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
@@ -98,8 +108,8 @@ export class DraftControllerListeners {
 
 export class DraftControllerListenersFactory {
 	static startListeners(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore): DraftControllerListeners {
-		const itemToReturn = new DraftControllerListeners(chainId, eventsDirectory, isFootball);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new DraftControllerListeners(chainId, eventsDirectory, isFootball, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

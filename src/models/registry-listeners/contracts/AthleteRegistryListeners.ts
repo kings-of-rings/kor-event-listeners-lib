@@ -21,15 +21,24 @@ export class AthleteRegistryListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
+	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.db = db;
+		// Bind this to the event handlers
+		this._handleActiveYearAddedEvent = this._handleActiveYearAddedEvent.bind(this);
+		this._handleIsSignedChangedEvent = this._handleIsSignedChangedEvent.bind(this);
+		this._handleAthleteAddedEvent = this._handleAthleteAddedEvent.bind(this);
+		this._handleAthleteNameChangedEvent = this._handleAthleteNameChangedEvent.bind(this);
+		this._handleAthleteCollegeChangedEvent = this._handleAthleteCollegeChangedEvent.bind(this);
+		this._handleAthleteHighSchoolChangedEvent = this._handleAthleteHighSchoolChangedEvent.bind(this);
+		this._handleAthleteProTeamChangedEvent = this._handleAthleteProTeamChangedEvent.bind(this);
+
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -56,43 +65,43 @@ export class AthleteRegistryListeners {
 			});
 	}
 
-	async _handleActiveYearAddedEvent(log: ethers.EventLog) {
+	async _handleActiveYearAddedEvent(log: ethers.Event) {
 		const event = new AthleteActiveYearAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteActiveYearAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleIsSignedChangedEvent(log: ethers.EventLog) {
+	async _handleIsSignedChangedEvent(log: ethers.Event) {
 		const event = new AthleteIsSignedChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteIsSignedChanged", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleAthleteAddedEvent(log: ethers.EventLog) {
+	async _handleAthleteAddedEvent(log: ethers.Event) {
 		const event = new AthleteAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleAthleteNameChangedEvent(log: ethers.EventLog) {
+	async _handleAthleteNameChangedEvent(log: ethers.Event) {
 		const event = new AthleteNameChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteNameChanged", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleAthleteCollegeChangedEvent(log: ethers.EventLog) {
+	async _handleAthleteCollegeChangedEvent(log: ethers.Event) {
 		const event = new AthleteCollegeChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteCollegeChanged", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleAthleteHighSchoolChangedEvent(log: ethers.EventLog) {
+	async _handleAthleteHighSchoolChangedEvent(log: ethers.Event) {
 		const event = new AthleteHighSchoolChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteHighSchoolChanged", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleAthleteProTeamChangedEvent(log: ethers.EventLog) {
+	async _handleAthleteProTeamChangedEvent(log: ethers.Event) {
 		const event = new AthleteProTeamChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteProTeamChanged", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
@@ -101,8 +110,8 @@ export class AthleteRegistryListeners {
 
 export class AthleteRegistryListenersFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): AthleteRegistryListeners {
-		const itemToReturn = new AthleteRegistryListeners(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new AthleteRegistryListeners(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

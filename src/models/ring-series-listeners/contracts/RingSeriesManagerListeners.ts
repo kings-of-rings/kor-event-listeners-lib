@@ -17,15 +17,19 @@ export class RingSeriesManagerListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
+	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.db = db;
+		// Bind this to the event handlers
+		this._handleAthleteRingSeriesQtySetEvent = this._handleAthleteRingSeriesQtySetEvent.bind(this);
+		this._handleAthleteRingSeriesEligibilitySetEvent = this._handleAthleteRingSeriesEligibilitySetEvent.bind(this);
+		this._handleRingSeriesYearAddedEvent = this._handleRingSeriesYearAddedEvent.bind(this);
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -47,18 +51,18 @@ export class RingSeriesManagerListeners {
 			});
 	}
 
-	async _handleAthleteRingSeriesQtySetEvent(log: ethers.EventLog) {
+	async _handleAthleteRingSeriesQtySetEvent(log: ethers.Event) {
 		const event = new AthleteRingSeriesQtySet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteRingSeriesQtySet", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	async _handleAthleteRingSeriesEligibilitySetEvent(log: ethers.EventLog) {
+	async _handleAthleteRingSeriesEligibilitySetEvent(log: ethers.Event) {
 		const event = new AthleteRingSeriesEligibilitySet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteRingSeriesEligibilitySet", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
 
-	async _handleRingSeriesYearAddedEvent(log: ethers.EventLog) {
+	async _handleRingSeriesYearAddedEvent(log: ethers.Event) {
 		const event = new RingSeriesYearAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "ringSeriesYearAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
@@ -67,8 +71,8 @@ export class RingSeriesManagerListeners {
 
 export class RingSeriesManagerListenersFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): RingSeriesManagerListeners {
-		const itemToReturn = new RingSeriesManagerListeners(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new RingSeriesManagerListeners(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

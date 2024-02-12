@@ -16,15 +16,19 @@ export class NILCoinFaucetListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
+	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.db = db;
+		// Bind this to the event handlers
+		this._handleFaucetTargetPriceEvent = this._handleFaucetTargetPriceEvent.bind(this);
+		this._handleTokenFaucetSaleEvent = this._handleTokenFaucetSaleEvent.bind(this);
+
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -45,12 +49,12 @@ export class NILCoinFaucetListeners {
 			});
 	}
 
-	async _handleFaucetTargetPriceEvent(log: ethers.EventLog) {
+	async _handleFaucetTargetPriceEvent(log: ethers.Event) {
 		const event = new FaucetTargetPrice(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "nilFaucetTargetPrice", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-	async _handleTokenFaucetSaleEvent(log: ethers.EventLog) {
+	async _handleTokenFaucetSaleEvent(log: ethers.Event) {
 		const event = new TokenFaucetSale(log);
 		const endpoint = await getEndpoint(this.eventsDirectory, "tokenFaucetSale", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
@@ -59,8 +63,8 @@ export class NILCoinFaucetListeners {
 
 export class NILCoinFaucetListenersFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): NILCoinFaucetListeners {
-		const itemToReturn = new NILCoinFaucetListeners(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new NILCoinFaucetListeners(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

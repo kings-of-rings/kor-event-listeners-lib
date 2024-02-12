@@ -16,15 +16,19 @@ export class ProRegistryListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
+	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.db = db;
+		// Bind this to the event handlers
+		this._handleTeamAddedEvent = this._handleTeamAddedEvent.bind(this);
+		this._handleTeamChangedEvent = this._handleTeamChangedEvent.bind(this);
+
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -45,13 +49,13 @@ export class ProRegistryListeners {
 			});
 	}
 
-	async _handleTeamAddedEvent(log: ethers.EventLog) {
+	async _handleTeamAddedEvent(log: ethers.Event) {
 		const event = new ProTeamAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleTeamChangedEvent(log: ethers.EventLog) {
+	async _handleTeamChangedEvent(log: ethers.Event) {
 		const event = new ProTeamChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamChanged", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
@@ -61,8 +65,8 @@ export class ProRegistryListeners {
 
 export class ProRegistryListenersFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): ProRegistryListeners {
-		const itemToReturn = new ProRegistryListeners(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new ProRegistryListeners(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

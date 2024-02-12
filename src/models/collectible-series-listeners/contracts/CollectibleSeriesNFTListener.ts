@@ -15,15 +15,17 @@ export class CollectibleSeriesNFTListener {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
+	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.db = db;
+		// Bind this to the event handlers
+		this._handleTokenUriSetEvent = this._handleTokenUriSetEvent.bind(this);
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -43,7 +45,7 @@ export class CollectibleSeriesNFTListener {
 			});
 	}
 
-	async _handleTokenUriSetEvent(log: ethers.EventLog) {
+	async _handleTokenUriSetEvent(log: ethers.Event) {
 		const event = new TokenUriSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "tokenUriSet", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
@@ -52,8 +54,8 @@ export class CollectibleSeriesNFTListener {
 
 export class CollectibleSeriesNFTListenerFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): CollectibleSeriesNFTListener {
-		const itemToReturn = new CollectibleSeriesNFTListener(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new CollectibleSeriesNFTListener(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

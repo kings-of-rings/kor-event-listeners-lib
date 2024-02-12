@@ -12,14 +12,17 @@ export class ERC721Listeners {
 	rpcUrl: string = "";
 	contractAddresses: string[] = [];
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
-	constructor(chainId: number, eventsDirectory: string) {
+	db: admin.firestore.Firestore;
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.db = db;
+		// Bind this to the event handlers
+		this._handleTransferEvent = this._handleTransferEvent.bind(this);
+
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -55,7 +58,7 @@ export class ERC721Listeners {
 		contract.on(contract.filters.Transfer(), this._handleTransferEvent);
 	}
 
-	_handleTransferEvent = async (log: ethers.Log) => {
+	_handleTransferEvent = async (log: ethers.Event) => {
 		//const event = new Erc721Transfer(log, this.chainId);
 		//const endpoint = await getEndpoint(this.eventsDirectory, "erc721Transfer", this.db);
 		//event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
@@ -65,8 +68,8 @@ export class ERC721Listeners {
 
 export class ERC721ListenersFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): ERC721Listeners {
-		const itemToReturn = new ERC721Listeners(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new ERC721Listeners(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

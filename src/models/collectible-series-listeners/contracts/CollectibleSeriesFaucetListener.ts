@@ -19,15 +19,21 @@ export class CollectibleSeriesFaucetListener {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
+	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
+		this.db = db;
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		// Bind this to the event handlers
+		this._handleAccessCreditsAddressEvent = this._handleAccessCreditsAddressEvent.bind(this);
+		this._handleAthletePriceSetEvent = this._handleAthletePriceSetEvent.bind(this);
+		this._handleCollectibleFaucetTimeSetEvent = this._handleCollectibleFaucetTimeSetEvent.bind(this);
+		this._handleLevelAddedEvent = this._handleLevelAddedEvent.bind(this);
+		this._handleCollectibleFaucetSaleEvent = this._handleCollectibleFaucetSaleEvent.bind(this);
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -49,27 +55,27 @@ export class CollectibleSeriesFaucetListener {
 			});
 	}
 
-	async _handleAccessCreditsAddressEvent(log: ethers.EventLog) {
+	async _handleAccessCreditsAddressEvent(log: ethers.Event) {
 		const event = new AccessCreditsAddressSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "accessCreditsAddress", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	async _handleAthletePriceSetEvent(log: ethers.EventLog) {
+	async _handleAthletePriceSetEvent(log: ethers.Event) {
 		const event = new AthletePriceSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athletePriceSet", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	async _handleCollectibleFaucetTimeSetEvent(log: ethers.EventLog) {
+	async _handleCollectibleFaucetTimeSetEvent(log: ethers.Event) {
 		const event = new CollectibleFaucetTimeSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleFaucetTimeSet", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	async _handleLevelAddedEvent(log: ethers.EventLog) {
+	async _handleLevelAddedEvent(log: ethers.Event) {
 		const event = new FaucetLevelAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "faucetLevelAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	async _handleCollectibleFaucetSaleEvent(log: ethers.EventLog) {
+	async _handleCollectibleFaucetSaleEvent(log: ethers.Event) {
 		const event = new CollectibleFaucetSale(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "faucetSale", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
@@ -78,8 +84,8 @@ export class CollectibleSeriesFaucetListener {
 
 export class CollectibleSeriesFaucetListenerFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): CollectibleSeriesFaucetListener {
-		const itemToReturn = new CollectibleSeriesFaucetListener(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new CollectibleSeriesFaucetListener(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

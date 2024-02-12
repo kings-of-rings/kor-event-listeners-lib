@@ -12,14 +12,16 @@ export class ERC1155Listeners {
 	rpcUrl: string = "";
 	contractAddresses: string[] = [];
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
-	constructor(chainId: number, eventsDirectory: string) {
+	db: admin.firestore.Firestore;
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.db = db;		
+		// Bind this to the event handlers
+		this._handleTransferSingleEvent = this._handleTransferSingleEvent.bind(this);
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -47,15 +49,15 @@ export class ERC1155Listeners {
 
 	_setContractListeners(db: admin.firestore.Firestore) {
 		this.contractAddresses.forEach((address) => {
-			this._setContractListener(address, db);
+			this._setContractListener(address);
 		});
 	}
-	_setContractListener(contractAddress: string, db: admin.firestore.Firestore) {
+	_setContractListener(contractAddress: string) {
 		const contract = new ethers.Contract(contractAddress, EVENTS_ABI, this.ethersProvider);
 		contract.on(contract.filters.TransferSingle(), this._handleTransferSingleEvent);
 	}
 
-	_handleTransferSingleEvent = async (log: ethers.Log) => {
+	_handleTransferSingleEvent = async (log: ethers.Event) => {
 		const event = new Erc1155TransferSingle(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "erc1155TransferSingle", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
@@ -65,8 +67,8 @@ export class ERC1155Listeners {
 
 export class ERC1155ListenersFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): ERC1155Listeners {
-		const itemToReturn = new ERC1155Listeners(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new ERC1155Listeners(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

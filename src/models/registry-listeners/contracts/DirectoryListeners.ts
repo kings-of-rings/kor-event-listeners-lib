@@ -18,15 +18,22 @@ export class DirectoryListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
+	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
+		this.db = db;
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.db = db;
+		// Bind this to the event handlers
+		this._handleDraftControllerAddedEvent = this._handleDraftControllerAddedEvent.bind(this);
+		this._handleRingSeriesTokenContractAddedEvent = this._handleRingSeriesTokenContractAddedEvent.bind(this);
+		this._handleCollectibleSeriesFaucetContractAddedEvent = this._handleCollectibleSeriesFaucetContractAddedEvent.bind(this);
+		this._handleCollectibleSeriesTokenContractAddedEvent = this._handleCollectibleSeriesTokenContractAddedEvent.bind(this);
+		
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -49,13 +56,13 @@ export class DirectoryListeners {
 			});
 	}
 
-	async _handleDraftControllerAddedEvent(log: ethers.EventLog) {
+	async _handleDraftControllerAddedEvent(log: ethers.Event) {
 		const event = new DraftControllerAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftControllerAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
 
-	async _handleRingSeriesTokenContractAddedEvent(log: ethers.EventLog) {
+	async _handleRingSeriesTokenContractAddedEvent(log: ethers.Event) {
 		const event = new RingSeriesTokenContractAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "ringSeriesTokenContractAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
@@ -66,12 +73,12 @@ export class DirectoryListeners {
 		const ref = this.db.collection(this.eventsDirectory).doc("erc1155").collection('contracts').doc(event.address.toLowerCase());
 		await ref.set(dataToSave);
 	}
-	async _handleCollectibleSeriesFaucetContractAddedEvent(log: ethers.EventLog) {
+	async _handleCollectibleSeriesFaucetContractAddedEvent(log: ethers.Event) {
 		const event = new CollectibleSeriesFaucetContractAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleSeriesFaucetContractAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	async _handleCollectibleSeriesTokenContractAddedEvent(log: ethers.EventLog) {
+	async _handleCollectibleSeriesTokenContractAddedEvent(log: ethers.Event) {
 		const event = new CollectibleSeriesTokenContractAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleSeriesTokenContractAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
@@ -86,8 +93,8 @@ export class DirectoryListeners {
 
 export class DirectoryListenersFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): DirectoryListeners {
-		const itemToReturn = new DirectoryListeners(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new DirectoryListeners(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

@@ -17,15 +17,20 @@ export class CollegeRegistryListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
+	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.db = db;
+		// Bind this to the event handlers
+		this._handleCollegeAddedEvent = this._handleCollegeAddedEvent.bind(this);
+		this._handleCollegeChangedEvent = this._handleCollegeChangedEvent.bind(this);
+		this._handleTierChangedEvent = this._handleTierChangedEvent.bind(this);
+
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -47,19 +52,19 @@ export class CollegeRegistryListeners {
 			});
 	}
 
-	async _handleCollegeAddedEvent(log: ethers.EventLog) {
+	async _handleCollegeAddedEvent(log: ethers.Event) {
 		const event = new CollegeAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleCollegeChangedEvent(log: ethers.EventLog) {
+	async _handleCollegeChangedEvent(log: ethers.Event) {
 		const event = new CollegeChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeChanged", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
-	async _handleTierChangedEvent(log: ethers.EventLog) {
+	async _handleTierChangedEvent(log: ethers.Event) {
 		const event = new TierChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeTierChanged", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
@@ -69,8 +74,8 @@ export class CollegeRegistryListeners {
 
 export class CollegeRegistryListenersFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): CollegeRegistryListeners {
-		const itemToReturn = new CollegeRegistryListeners(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new CollegeRegistryListeners(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

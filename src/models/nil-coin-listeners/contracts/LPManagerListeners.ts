@@ -15,15 +15,18 @@ export class LPManagerListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
+	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.db = db;
+		// Bind this to the event handlers
+		this._handleNilAddLiquidityProcedureEvent = this._handleNilAddLiquidityProcedureEvent.bind(this);
+
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -43,7 +46,7 @@ export class LPManagerListeners {
 			});
 	}
 
-	async _handleNilAddLiquidityProcedureEvent(log: ethers.EventLog) {
+	async _handleNilAddLiquidityProcedureEvent(log: ethers.Event) {
 		const event = new NilAddLiquidityProcedure(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "nilLiquidityProcedure", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
@@ -52,8 +55,8 @@ export class LPManagerListeners {
 
 export class LPManagerListenersFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): LPManagerListeners {
-		const itemToReturn = new LPManagerListeners(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new LPManagerListeners(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }

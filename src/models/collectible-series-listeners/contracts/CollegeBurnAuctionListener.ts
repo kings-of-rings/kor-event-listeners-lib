@@ -18,15 +18,20 @@ export class CollegeBurnAuctionListener {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db?: admin.firestore.Firestore;
+	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string) {
+	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.db = db;
+		// Bind this to the event handlers
+		this._handleBurnBidPlacedEvent = this._handleBurnBidPlacedEvent.bind(this);
+		this._handleBurnBidIncreasedEvent = this._handleBurnBidIncreasedEvent.bind(this);
+		this._handleBurnAuctionTimeSetEvent = this._handleBurnAuctionTimeSetEvent.bind(this);
+		this._handleRemoveBidEvent = this._handleRemoveBidEvent.bind(this);
 	};
 
-	async startListeners(db: admin.firestore.Firestore) {
-		this.db = db;
+	async startListeners() {
 		this._setListeners();
 	}
 
@@ -47,30 +52,30 @@ export class CollegeBurnAuctionListener {
 			});
 	}
 
-	async _handleBurnBidPlacedEvent(log: ethers.EventLog) {
+	async _handleBurnBidPlacedEvent(log: ethers.Event) {
 		const event = new BurnBidPlaced(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnBidPlaced", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-	async _handleBurnBidIncreasedEvent(log: ethers.EventLog) {
+	async _handleBurnBidIncreasedEvent(log: ethers.Event) {
 		const event = new BurnBidIncreased(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnBidIncreased", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
-	async _handleBurnAuctionTimeSetEvent(log: ethers.EventLog) {
+	async _handleBurnAuctionTimeSetEvent(log: ethers.Event) {
 		const event = new BurnAuctionTimeSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnAuctionTimeSet", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY);
 	}
-	async _handleRemoveBidEvent(log: ethers.EventLog) {
+	async _handleRemoveBidEvent(log: ethers.Event) {
 		//console.log("Event", log);
 	}
 }
 
 export class CollegeBurnAuctionListenerFactory {
 	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): CollegeBurnAuctionListener {
-		const itemToReturn = new CollegeBurnAuctionListener(chainId, eventsDirectory);
-		itemToReturn.startListeners(db);
+		const itemToReturn = new CollegeBurnAuctionListener(chainId, eventsDirectory, db);
+		itemToReturn.startListeners();
 		return itemToReturn;
 	}
 }
