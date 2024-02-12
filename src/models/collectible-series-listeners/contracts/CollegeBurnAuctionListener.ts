@@ -17,7 +17,7 @@ export class CollegeBurnAuctionListener {
 	rpcUrl: string = "";
 	contractAddress: string = "";
 	contract?: ethers.Contract;
-	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	ethersProvider?: any;
 	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {

@@ -1,7 +1,7 @@
 import { ethers } from "ethers"
 
 
-export const getEthersProvider = (rpcURL: string): ethers.JsonRpcProvider | ethers.WebSocketProvider => {
+export const getEthersProvider = (rpcURL: string): any => {
 	if (rpcURL.startsWith("wss")) {
 		return new ethers.WebSocketProvider(rpcURL);
 	} else {

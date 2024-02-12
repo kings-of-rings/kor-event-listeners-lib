@@ -15,7 +15,7 @@ export class ProRegistryListeners {
 	rpcUrl: string = "";
 	contractAddress: string = "";
 	contract?: ethers.Contract;
-	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	ethersProvider?: any;
 	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {
@@ -47,7 +47,7 @@ export class ProRegistryListeners {
 
 	async _handleTeamAddedEvent(log: ethers.EventLog) {
 		const event = new ProTeamAdded(log, this.chainId);
-		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamAdded", this.db);		
+		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamAdded", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 

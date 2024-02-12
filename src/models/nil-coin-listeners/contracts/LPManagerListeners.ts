@@ -14,7 +14,7 @@ export class LPManagerListeners {
 	rpcUrl: string = "";
 	contractAddress: string = "";
 	contract?: ethers.Contract;
-	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	ethersProvider?: any;
 	db?: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string) {
@@ -47,7 +47,7 @@ export class LPManagerListeners {
 		const event = new NilAddLiquidityProcedure(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "nilLiquidityProcedure", this.db);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
-		}
+	}
 }
 
 export class LPManagerListenersFactory {

@@ -11,7 +11,7 @@ export class ERC721Listeners {
 	eventsDirectory: string;
 	rpcUrl: string = "";
 	contractAddresses: string[] = [];
-	ethersProvider?: ethers.JsonRpcProvider | ethers.WebSocketProvider;
+	ethersProvider?: any;
 	db?: admin.firestore.Firestore;
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
