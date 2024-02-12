@@ -6,8 +6,8 @@ import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 
 const EVENTS_ABI = [
-	"event NewHighSchoolAdded(uint256 indexed _highSchoolId,string indexed _name,string indexed _state,string _city,string _mascot)",
-	"event HighSchoolChanged(uint256 indexed _highSchoolId,string indexed _name,string indexed _state,string _city,string _mascot)"
+	"event NewHighSchoolAdded(uint256 indexed _highSchoolId,string _name,string _state,string _city,string _mascot)",
+	"event HighSchoolChanged(uint256 indexed _highSchoolId,string _name,string _state,string _city,string _mascot)"
 ];
 
 export class HighSchoolRegistryListeners {
@@ -53,12 +53,8 @@ export class HighSchoolRegistryListeners {
 	}
 
 	async _handleHighSchoolChangedEvent(log: any) {
-		console.log("HighSchoolChanged event received");
-		console.log("eventlog ", log.log);
 		const event = new HighSchoolChanged(log.log, this.chainId);
-		console.log("HighSchoolChanged event ", event);
 		const endpoint = await getEndpoint(this.eventsDirectory, "highSchoolChanged", this.db);
-		console.log("HighSchoolChanged event ", event);
 		event.saveData(endpoint, process.env.LAMBDA_API_KEY, this.ethersProvider);
 	}
 
