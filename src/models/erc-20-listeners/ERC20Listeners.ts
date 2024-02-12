@@ -1,7 +1,6 @@
 import { Erc20Transfer } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
-import { event } from "firebase-functions/v1/analytics";
 import { getEndpoint } from "../../utils/getEndpoint";
 import { getEthersProvider } from '../../utils/getEthersProvider';
 const EVENTS_ABI = [
