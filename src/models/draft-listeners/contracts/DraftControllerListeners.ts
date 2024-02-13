@@ -26,6 +26,7 @@ export class DraftControllerListeners {
 	db: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore) {
+		console.log("DraftControllerListeners.constructor", chainId, eventsDirectory, isFootball);
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
 		this.fieldName = isFootball ? "draftControllerFootball" : "draftControllerBasketball";
@@ -52,6 +53,7 @@ export class DraftControllerListeners {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
 					this.contractAddress = data[this.fieldName];
+					console.log("this.contractAddress", this.contractAddress);
 					if (this.contractAddress?.length > 0) {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
@@ -107,10 +109,17 @@ export class DraftControllerListeners {
 	}
 
 	async _handleDraftTimeSetEvent(log: ethers.Event) {
+		console.log("DraftTimeSet event", log);
 		const event = new DraftTimeSet(log, this.chainId);
+		console.log("event", event);
+
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftTimeSet", this.db);
+
+		console.log("endpoint", endpoint);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+
+		console.log("result", result);
 		if (result.status === undefined) {
 			const errorData = {
 				"error": "Error in DraftTimeSet.saveData",

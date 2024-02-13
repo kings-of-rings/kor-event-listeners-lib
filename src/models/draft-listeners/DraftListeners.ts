@@ -1,9 +1,6 @@
 import * as admin from "firebase-admin";
 import { DraftControllerListeners, DraftControllerListenersFactory } from "./contracts/DraftControllerListeners";
 import { DraftPickNFTListeners, DraftPickNFTListenersFactory } from "./contracts/DraftPickNFTListeners";
-
-import { CollegeRegistryListeners, CollegeRegistryListenersFactory } from "../registry-listeners/contracts/CollegeRegistryListeners";
-
 export class DraftListeners {
 	chainId: number;
 	eventsDirectory: string;
