@@ -6,13 +6,12 @@ import { getEthersProvider } from "../../../utils/getEthersProvider";
 import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
-	"event ActiveYearAdded(uint256  _athleteId, uint16  _year)",
-	"event IsSignedChanged(uint256  _athleteId, bool  _isSigned)",
-	"event AthleteAdded(uint256  _athleteId,bool  _isFootball,string  _displayName,string _lastName,string _middleName,string _firstName)",
-	"event AthleteNameChanged(uint256  _athleteId,string  _displayName,string  _lastName,string _middleName,string _firstName)",
-	"event AthleteCollegeChanged(uint256  _athleteId,uint256  _collegeId,uint256  _jerseyNumber,string _position)",
-	"event AthleteHighSchoolChanged(uint256  _athleteId,uint256 _highSchoolId,uint256  _jerseyNumber,string _position,uint16 _year)",
-	"event AthleteProTeamChanged(uint256  _athleteId,uint256  _proTeamId,uint256  _jerseyNumber,string _position)"
+	"event ActiveYearAdded(uint256 indexed _athleteId, uint16 indexed _year)",
+	"event IsSignedChanged(uint256 indexed _athleteId, bool indexed _isSigned)",
+	"event AthleteAdded(uint256 indexed _athleteId,bool indexed _isFootball,string  _displayName,string _lastName,string _middleName,string _firstName)",
+	"event AthleteNameChanged(uint256 indexed _athleteId,string  _displayName,string  _lastName,string _middleName,string _firstName)",
+	"event AthleteCollegeChanged(uint256 indexed _athleteId,uint256 indexed _collegeId,uint256  _jerseyNumber,string _position)",
+	"event AthleteProTeamChanged(uint256 indexed _athleteId,uint256 indexed _proTeamId,uint256 indexed _jerseyNumber,string _position)"
 ];
 
 export class AthleteRegistryListeners {
@@ -34,7 +33,6 @@ export class AthleteRegistryListeners {
 		this._handleAthleteAddedEvent = this._handleAthleteAddedEvent.bind(this);
 		this._handleAthleteNameChangedEvent = this._handleAthleteNameChangedEvent.bind(this);
 		this._handleAthleteCollegeChangedEvent = this._handleAthleteCollegeChangedEvent.bind(this);
-		this._handleAthleteHighSchoolChangedEvent = this._handleAthleteHighSchoolChangedEvent.bind(this);
 		this._handleAthleteProTeamChangedEvent = this._handleAthleteProTeamChangedEvent.bind(this);
 
 	};
@@ -58,7 +56,6 @@ export class AthleteRegistryListeners {
 						this.contract.on(this.contract.filters.AthleteAdded(), (_athleteId, _isFootball, _displayName, _lastName, _middleName, _firstName, eventObject) => this._handleAthleteAddedEvent(eventObject));
 						this.contract.on(this.contract.filters.AthleteNameChanged(), (_athleteId, _displayName, _lastName, _middleName, _firstName, eventObject) => this._handleAthleteNameChangedEvent(eventObject));
 						this.contract.on(this.contract.filters.AthleteCollegeChanged(), (_athleteId, _collegeId, _jerseyNumber, _position, eventObject) => this._handleAthleteCollegeChangedEvent(eventObject));
-						this.contract.on(this.contract.filters.AthleteHighSchoolChanged(), (_athleteId, _highSchoolId, _jerseyNumber, _position, _year, eventObject) => this._handleAthleteHighSchoolChangedEvent(eventObject));
 						this.contract.on(this.contract.filters.AthleteProTeamChanged(), (_athleteId, _proTeamId, _jerseyNumber, _position, eventObject) => this._handleAthleteProTeamChangedEvent(eventObject));
 					}
 				}
@@ -160,24 +157,6 @@ export class AthleteRegistryListeners {
 		}
 	}
 
-	async _handleAthleteHighSchoolChangedEvent(log: ethers.Event) {
-		const event = new AthleteHighSchoolChanged(log, this.chainId);
-		const endpoint = await getEndpoint(this.eventsDirectory, "athleteHighSchoolChanged", this.db);
-		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
-		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
-		if (result.status === undefined) {
-			const errorData = {
-				"error": "Error in AthleteHighSchoolChanged.saveData",
-				"result": result.response.data,
-				"endpoint": endpoint,
-				"txHash": log.transactionHash,
-				"blockNumber": log.blockNumber,
-				"chainId": this.chainId,
-				"contractAddress": log.address,
-			}
-			await saveError(errorData, this.db);
-		}
-	}
 
 	async _handleAthleteProTeamChangedEvent(log: ethers.Event) {
 		const event = new AthleteProTeamChanged(log, this.chainId);

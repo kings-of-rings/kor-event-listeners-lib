@@ -3,7 +3,6 @@ import { AthletePaymentManagerListeners, AthletePaymentManagerListenersFactory }
 import { AthleteRegistryListeners, AthleteRegistryListenersFactory } from "./contracts/AthleteRegistryListeners";
 import { CollegeRegistryListeners, CollegeRegistryListenersFactory } from "./contracts/CollegeRegistryListeners";
 import { DirectoryListeners, DirectoryListenersFactory } from "./contracts/DirectoryListeners";
-import { HighSchoolRegistryListeners, HighSchoolRegistryListenersFactory } from "./contracts/HighSchoolRegistryListeners";
 import { ProRegistryListeners, ProRegistryListenersFactory } from "./contracts/ProRegistryListeners";
 
 export class RegistryListeners {
@@ -12,7 +11,6 @@ export class RegistryListeners {
 	athleteRegistry: AthleteRegistryListeners;
 	collegeRegistry: CollegeRegistryListeners;
 	directory: DirectoryListeners;
-	highSchoolRegistry: HighSchoolRegistryListeners;
 	proRegistry: ProRegistryListeners;
 	paymentManager: AthletePaymentManagerListeners;
 
@@ -25,7 +23,6 @@ export class RegistryListeners {
 		this.athleteRegistry = AthleteRegistryListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
 		this.collegeRegistry = CollegeRegistryListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
 		this.directory = DirectoryListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
-		this.highSchoolRegistry = HighSchoolRegistryListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
 		this.proRegistry = ProRegistryListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
 		this.paymentManager = AthletePaymentManagerListenersFactory.startListeners(this.chainId, this.eventsDirectory, db);
 	}
