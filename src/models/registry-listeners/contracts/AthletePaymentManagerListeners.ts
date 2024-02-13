@@ -1,4 +1,4 @@
-import { AthleteActiveYearAdded, AthleteAdded, AthleteCollegeChanged, AthleteHighSchoolChanged, AthleteIsSignedChanged, AthleteNameChanged, AthleteProTeamChanged, PaymentDisbursed, PaymentReceived } from "@kings-of-rings/kor-contract-event-data-models/lib";
+import { AthleteActiveYearAdded, AthleteAdded, AthleteCollegeChanged, AthleteNameChanged, AthleteProTeamChanged, PaymentDisbursed, PaymentReceived } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
