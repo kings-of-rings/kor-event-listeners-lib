@@ -1,4 +1,4 @@
-import { AthleteActiveYearAdded, AthleteAdded, AthleteCollegeChanged, AthleteIsSignedChanged, AthleteNameChanged, AthleteProTeamChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
+import { AthleteActiveYearAdded, AthleteAdded, AthleteCollegeChanged, AthleteNameChanged, AthleteProTeamChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
@@ -30,7 +30,6 @@ export class AthleteRegistryListeners {
 		this.db = db;
 		// Bind this to the event handlers
 		this._handleActiveYearAddedEvent = this._handleActiveYearAddedEvent.bind(this);
-		this._handleIsSignedChangedEvent = this._handleIsSignedChangedEvent.bind(this);
 		this._handleAthleteAddedEvent = this._handleAthleteAddedEvent.bind(this);
 		this._handleAthleteNameChangedEvent = this._handleAthleteNameChangedEvent.bind(this);
 		this._handleAthleteCollegeChangedEvent = this._handleAthleteCollegeChangedEvent.bind(this);
@@ -52,7 +51,6 @@ export class AthleteRegistryListeners {
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.ActiveYearAdded(), (_athleteId, _year, eventObject) => this._handleActiveYearAddedEvent(eventObject));
-						this.contract.on(this.contract.filters.IsSignedChanged(), (_athleteId, _isSigned, eventObject) => this._handleIsSignedChangedEvent(eventObject));
 						this.contract.on(this.contract.filters.AthleteAdded(), (_athleteId, _isFootball, _displayName, _lastName, _middleName, _firstName, eventObject) => this._handleAthleteAddedEvent(eventObject));
 						this.contract.on(this.contract.filters.AthleteNameChanged(), (_athleteId, _displayName, _lastName, _middleName, _firstName, eventObject) => this._handleAthleteNameChangedEvent(eventObject));
 						this.contract.on(this.contract.filters.AthleteCollegeChanged(), (_athleteId, _collegeId, _jerseyNumber, _position, eventObject) => this._handleAthleteCollegeChangedEvent(eventObject));
@@ -70,25 +68,6 @@ export class AthleteRegistryListeners {
 		if (result.status === undefined) {
 			const errorData = {
 				"error": "Error in AthleteActiveYearAdded.saveData",
-				"result": result.response.data,
-				"endpoint": endpoint,
-				"txHash": log.transactionHash,
-				"blockNumber": log.blockNumber,
-				"chainId": this.chainId,
-				"contractAddress": log.address,
-			}
-			await saveError(errorData, this.db);
-		}
-	}
-
-	async _handleIsSignedChangedEvent(log: ethers.Event) {
-		const event = new AthleteIsSignedChanged(log, this.chainId);
-		const endpoint = await getEndpoint(this.eventsDirectory, "athleteIsSignedChanged", this.db);
-		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
-		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
-		if (result.status === undefined) {
-			const errorData = {
-				"error": "Error in AthleteIsSignedChanged.saveData",
 				"result": result.response.data,
 				"endpoint": endpoint,
 				"txHash": log.transactionHash,
