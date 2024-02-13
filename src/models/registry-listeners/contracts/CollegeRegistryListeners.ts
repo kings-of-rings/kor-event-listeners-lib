@@ -47,7 +47,7 @@ export class CollegeRegistryListeners {
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.CollegeAdded(), (_collegeId, _name, _conference, _mascot, _tier, _royalty, eventObject) => this._handleCollegeAddedEvent(eventObject));
 						this.contract.on(this.contract.filters.CollegeChanged(), (_collegeId, _name, _conference, _mascot, _royalty, eventObject) => this._handleCollegeChangedEvent(eventObject));
-						this.contract.on(this.contract.filters.TierChanged(), (_collegeId, _tier, eventObject) => this._handleCollegeChangedEvent(eventObject));
+						this.contract.on(this.contract.filters.TierChanged(), (_collegeId, _tier, eventObject) => this._handleTierChangedEvent(eventObject));
 					}
 				}
 			});
