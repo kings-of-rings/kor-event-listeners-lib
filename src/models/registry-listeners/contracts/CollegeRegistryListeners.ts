@@ -6,9 +6,9 @@ import { getEthersProvider } from "../../../utils/getEthersProvider";
 import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
-	"event CollegeAdded(uint256 _collegeId,string _name,string _conference,string _mascot, uint16 _tier, uint16 _royalty)",
-	"event CollegeChanged(uint256 _collegeId,string _name,string _conference,string _mascot, uint16 _royalty)",
-	"event TierChanged(uint256 _collegeId, uint256 _tier)",
+	"event CollegeAdded(uint256 indexed _collegeId,string _name,string _conference,string _mascot, uint16 _tier, uint16 _royalty)",
+	"event CollegeChanged(uint256 indexed _collegeId,string _name,string _conference,string _mascot, uint16 _royalty)",
+	"event TierChanged(uint256 indexed _collegeId, uint256 indexed _tier)",
 ];
 
 export class CollegeRegistryListeners {
