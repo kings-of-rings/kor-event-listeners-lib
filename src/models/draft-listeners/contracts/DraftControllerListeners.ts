@@ -6,13 +6,13 @@ import { getEthersProvider } from "../../../utils/getEthersProvider";
 import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
-	"event DraftPickClaimed(address  _claimingAddress,uint256  _tokenId,uint256  _draftBidId,uint256 _year,bool _isFootball)",
+	"event DraftPickClaimed(address indexed _claimingAddress,uint256 indexed _tokenId,uint256 indexed _draftBidId,uint256 _year,bool _isFootball)",
 	"event DraftResultsFinalized(bool _resultsFinal, uint256 _year, bool _isFootball)",
 	"event DraftTimeSet(uint256 _startTs, uint256 _endTs, uint256 _year, bool _isFootball)",
-	"event DraftStakeClaimed(uint256  _bidId,uint256  _year,address  _claimingAddress,uint256 _amount,bool _isFootball)",
-	"event DraftBidPlaced(uint256  _bidId,address  _bidder,uint256  _duration,uint256 _amount,uint256 _points,uint256 _year,bool _isFootball)",
-	"event DraftBidIncreased(uint256  _bidId,address  _bidder,uint256  _duration,uint256 _amountAdded,uint256 _points,uint256 _year,bool _isFootball)",
-	"event ClaimingRequirementsSet(uint256  _tokenId,uint256  _year,bool  _isFootball, uint256 _amount)"
+	"event DraftStakeClaimed(uint256 indexed _bidId,uint256 indexed _year,address indexed _claimingAddress,uint256 _amount,bool _isFootball)",
+	"event DraftBidPlaced(uint256 indexed _bidId,address indexed _bidder,uint256 indexed _duration,uint256 _amount,uint256 _points,uint256 _year,bool _isFootball)",
+	"event DraftBidIncreased(uint256 indexed _bidId,address indexed _bidder,uint256 indexed _duration,uint256 _amountAdded,uint256 _points,uint256 _year,bool _isFootball)",
+	"event ClaimingRequirementsSet(uint256 indexed _tokenId,uint256 indexed _year,bool indexed _isFootball, uint256 _amount)"
 ];
 
 export class DraftControllerListeners {
@@ -53,7 +53,6 @@ export class DraftControllerListeners {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
 					this.contractAddress = data[this.fieldName];
-					console.log("this.contractAddress", this.contractAddress);
 					if (this.contractAddress?.length > 0) {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
@@ -109,17 +108,10 @@ export class DraftControllerListeners {
 	}
 
 	async _handleDraftTimeSetEvent(log: ethers.Event) {
-		console.log("DraftTimeSet event", log);
 		const event = new DraftTimeSet(log, this.chainId);
-		console.log("event", event);
-
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftTimeSet", this.db);
-
-		console.log("endpoint", endpoint);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
-
-		console.log("result", result);
 		if (result.status === undefined) {
 			const errorData = {
 				"error": "Error in DraftTimeSet.saveData",
