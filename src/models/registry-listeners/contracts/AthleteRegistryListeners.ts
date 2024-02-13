@@ -1,4 +1,4 @@
-import { AthleteActiveYearAdded, AthleteAdded, AthleteCollegeChanged, AthleteHighSchoolChanged, AthleteIsSignedChanged, AthleteNameChanged, AthleteProTeamChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
+import { AthleteActiveYearAdded, AthleteAdded, AthleteCollegeChanged, AthleteIsSignedChanged, AthleteNameChanged, AthleteProTeamChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
@@ -8,10 +8,10 @@ import { saveError } from "../../../utils/saveError";
 const EVENTS_ABI = [
 	"event ActiveYearAdded(uint256 indexed _athleteId, uint16 indexed _year)",
 	"event IsSignedChanged(uint256 indexed _athleteId, bool indexed _isSigned)",
-	"event AthleteAdded(uint256 indexed _athleteId,bool indexed _isFootball,string  _displayName,string _lastName,string _middleName,string _firstName)",
-	"event AthleteNameChanged(uint256 indexed _athleteId,string  _displayName,string  _lastName,string _middleName,string _firstName)",
-	"event AthleteCollegeChanged(uint256 indexed _athleteId,uint256 indexed _collegeId,uint256  _jerseyNumber,string _position)",
-	"event AthleteProTeamChanged(uint256 indexed _athleteId,uint256 indexed _proTeamId,uint256 indexed _jerseyNumber,string _position)"
+	"event AthleteAdded(uint256 indexed _athleteId, bool indexed _isFootball, string _displayName, string _lastName, string _middleName, string _firstName)",
+	"event AthleteNameChanged(uint256 indexed _athleteId,string _displayName,string _lastName,string _middleName,string _firstName)",
+	"event AthleteCollegeChanged(uint256 indexed _athleteId,uint256 indexed _collegeId,uint256 indexed _jerseyNumber,uint16 _position)",
+	"event AthleteProTeamChanged(uint256 indexed _athleteId,uint256 indexed _proTeamId,uint256 indexed _jerseyNumber,uint16 _position)"
 ];
 
 export class AthleteRegistryListeners {
@@ -24,6 +24,7 @@ export class AthleteRegistryListeners {
 	db: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
+		console.log('AthleteRegistryListeners');
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
 		this.db = db;
@@ -34,7 +35,6 @@ export class AthleteRegistryListeners {
 		this._handleAthleteNameChangedEvent = this._handleAthleteNameChangedEvent.bind(this);
 		this._handleAthleteCollegeChangedEvent = this._handleAthleteCollegeChangedEvent.bind(this);
 		this._handleAthleteProTeamChangedEvent = this._handleAthleteProTeamChangedEvent.bind(this);
-
 	};
 
 	async startListeners() {
@@ -101,7 +101,9 @@ export class AthleteRegistryListeners {
 	}
 
 	async _handleAthleteAddedEvent(log: ethers.Event) {
+		console.log('AthleteAdded ', log);
 		const event = new AthleteAdded(log, this.chainId);
+		console.log('eventevent ', event);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteAdded", this.db);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
@@ -139,10 +141,14 @@ export class AthleteRegistryListeners {
 	}
 
 	async _handleAthleteCollegeChangedEvent(log: ethers.Event) {
+		console.log('Athlete College Changed ', log);
 		const event = new AthleteCollegeChanged(log, this.chainId);
+		console.log('event ', event);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteCollegeChanged", this.db);
+		console.log('endpoint ', endpoint);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		console.log('result ', result);
 		if (result.status === undefined) {
 			const errorData = {
 				"error": "Error in AthleteCollegeChanged.saveData",
