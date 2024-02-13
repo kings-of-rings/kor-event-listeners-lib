@@ -46,7 +46,7 @@ export class AthleteRegistryListeners {
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
-					this.contractAddress = data.highSchool;
+					this.contractAddress = data.athlete;
 					if (this.contractAddress?.length > 0) {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
