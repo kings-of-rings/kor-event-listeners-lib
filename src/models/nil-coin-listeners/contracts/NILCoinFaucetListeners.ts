@@ -38,7 +38,7 @@ export class NILCoinFaucetListeners {
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
-					this.contractAddress = data.nilCoinFaucet;
+					this.contractAddress = data.tokenFaucet;
 					if (this.contractAddress?.length > 0) {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
