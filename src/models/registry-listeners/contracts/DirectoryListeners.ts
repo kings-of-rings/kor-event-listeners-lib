@@ -6,10 +6,10 @@ import { getEthersProvider } from "../../../utils/getEthersProvider";
 import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
-	"event DraftControllerAdded(uint16  _year, address  _address, bool  _isFootball)",
-	"event RingSeriesTokenContractAdded(uint16  _year, address  _address)",
-	"event CollectibleSeriesFaucetContractAdded(uint16  _year, address  _address, bool  _isFootball)",
-	"event CollectibleSeriesTokenContractAdded(uint16  _year, address  _address)"
+	"event DraftControllerAdded(uint16 indexed _year, address indexed _address, bool indexed _isFootball)",
+	"event RingSeriesTokenContractAdded(uint16 indexed _year, address indexed _address)",
+	"event CollectibleSeriesFaucetContractAdded(uint16 indexed _year, address indexed _address, bool indexed _isFootball)",
+	"event CollectibleSeriesTokenContractAdded(uint16 indexed _year, address indexed _address)"
 ];
 
 export class DirectoryListeners {
