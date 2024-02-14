@@ -70,7 +70,7 @@ export class NILCoinFaucetListeners {
 	}
 	async _handleTokenFaucetSaleEvent(log: ethers.Event) {
 		console.log("Token Faucet Sale")
-		const event = new TokenFaucetSale(log);
+		const event = new TokenFaucetSale(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "tokenFaucetSale", this.db);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
