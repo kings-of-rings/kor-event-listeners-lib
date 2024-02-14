@@ -7,7 +7,7 @@ import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
 	"event FaucetTargetPrice(uint256 _price)",
-	"event TokenFaucetSale(uint256 _saleId, address _buyer, uint256 _qty, uint256 _totalCost)"
+	"event TokenFaucetSale(uint256 indexed _saleId, address indexed _buyer, uint256 _qty, uint256 _totalCost)"
 ];
 
 export class NILCoinFaucetListeners {
