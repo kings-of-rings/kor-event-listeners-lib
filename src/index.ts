@@ -6,3 +6,4 @@ export * from './models/erc-1155-listeners/ERC1155Listeners';
 export * from './models/nil-coin-listeners/NILCoinListeners';
 export * from './models/registry-listeners/RegistryListeners';
 export * from './models/ring-series-listeners/RingSeriesListeners';
+export * from './models/staking/StakingListeners';
