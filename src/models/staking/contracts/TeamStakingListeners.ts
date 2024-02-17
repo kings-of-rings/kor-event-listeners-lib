@@ -6,7 +6,7 @@ import { getEthersProvider } from "../../../utils/getEthersProvider";
 import { saveError } from "../../../utils/saveError";
 
 const EVENTS_ABI = [
-	"event StakeAdded(uint256 indexed _stakeId,address indexed _staker,uint256 indexed _collegeId,uint256 _amount,uint16 _year,bool _isNatty,bool _increase)", 
+	"event StakeAdded(uint256 indexed _stakeId,address indexed _staker,uint256 indexed _collegeId,uint256 _amount,uint16 _year,bool _isNatty,bool _increase)",
 	"event StakeClaimed(uint256 indexed _stakeId,address indexed _staker,uint256 indexed _collegeId,uint256 _amount,uint16 _year,bool _isNatty)",
 	"event StakingTimeSet(uint256 _stakingOpens,uint256 _stakingCloses,uint256 _claimableTs,uint16 _year,bool _isNatty)"
 ];
@@ -19,7 +19,7 @@ export class TeamStakingListeners {
 	contractAddress: string = "";
 	contract?: ethers.Contract;
 	ethersProvider?: any;
-	db: admin.firestore.Firestore;	
+	db: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string, isNatty: boolean, isCurrentYear: boolean, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
@@ -49,9 +49,9 @@ export class TeamStakingListeners {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.StakeAdded(), (_claimingAddress, _tokenId, _draftBidId, _year, _isFootball, eventObject) => this._handleStakeAddedEvent(eventObject));
-						this.contract.on(this.contract.filters.StakeClaimed(), (_resultsFinal, _year, _isFootball, eventObject) => this._handleStakeClaimedEvent(eventObject));
-						this.contract.on(this.contract.filters.StakingTimeSet(), (_startTs, _endTs, _year, _isFootball, eventObject) => this._handleStakingTimeSetEvent(eventObject));
+						this.contract.on(this.contract.filters.StakeAdded(), (_stakeId, _staker, _collegeId, _amount, _year, _isNatty, _increase, eventObject) => this._handleStakeAddedEvent(eventObject));
+						this.contract.on(this.contract.filters.StakeClaimed(), (_stakeId, _staker, _collegeId, _amount, _year, _isNatty, eventObject) => this._handleStakeClaimedEvent(eventObject));
+						this.contract.on(this.contract.filters.StakingTimeSet(), (_stakingOpens, _stakingCloses, _claimableTs, _year, _isNatty, eventObject) => this._handleStakingTimeSetEvent(eventObject));
 					}
 				}
 			});
