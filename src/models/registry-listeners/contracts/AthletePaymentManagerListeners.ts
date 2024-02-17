@@ -1,4 +1,4 @@
-import { AthleteActiveYearAdded, AthleteAdded, AthleteCollegeChanged, AthleteNameChanged, AthleteProTeamChanged, PaymentDisbursed, PaymentReceived } from "@kings-of-rings/kor-contract-event-data-models/lib";
+import { AthletePaymentDisbursed, AthletePaymentReceived } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
@@ -37,7 +37,7 @@ export class AthletePaymentManagerListeners {
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
-					this.contractAddress = data.highSchool;
+					this.contractAddress = data.athletePaymentManager;
 					if (this.contractAddress?.length > 0) {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
@@ -50,7 +50,7 @@ export class AthletePaymentManagerListeners {
 	}
 
 	async _handleAthletePaymentReceivedEvent(log: ethers.Event) {
-		const event = new PaymentReceived(log, this.chainId);
+		const event = new AthletePaymentReceived(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athletePaymentReceived", this.db);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
@@ -69,7 +69,7 @@ export class AthletePaymentManagerListeners {
 	}
 
 	async _handleAthletePaymentDisbursedEvent(log: ethers.Event) {
-		const event = new PaymentDisbursed(log, this.chainId);
+		const event = new AthletePaymentDisbursed(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athletePaymentDisbursed", this.db);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);

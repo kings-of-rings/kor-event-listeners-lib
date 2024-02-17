@@ -1,4 +1,4 @@
-import { ClaimingRequirementsSet, DraftBidIncreased, DraftBidPlaced, DraftPickClaimed, DraftResultsFinalized, DraftStakeClaimed, DraftTimeSet, TeamStakeAdded, TeamStakeClaimed, TeamStakingTimeSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
+import { TeamStakeAdded, TeamStakeClaimed, TeamStakingTimeSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
@@ -62,6 +62,7 @@ export class TeamStakingListeners {
 		const endpoint = await getEndpoint(this.eventsDirectory, "teamStakeAdded", this.db);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
+		
 		if (result.status === undefined) {
 			const errorData = {
 				"error": "Error in HandleStakeAddedEvent.saveData",
