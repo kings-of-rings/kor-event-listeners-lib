@@ -13,7 +13,7 @@ const EVENTS_ABI = [
 
 export class TeamStakingListeners {
 	eventsDirectory: string;
-	fieldName: string;
+	docName: string = "teamStakingCurrent";
 	chainId: number;
 	rpcUrl: string = "";
 	contractAddress: string = "";
@@ -26,7 +26,7 @@ export class TeamStakingListeners {
 		this.eventsDirectory = eventsDirectory;
 		const prefix = isNatty ? "natty" : "team";
 		const suffix = isCurrentYear ? "Current" : "Previous";
-		this.fieldName = `${prefix}Staking${suffix}`;
+		this.docName = `${prefix}Staking${suffix}`;
 
 		this.db = db;
 		// Bind this to the event handlers
@@ -40,13 +40,19 @@ export class TeamStakingListeners {
 	}
 
 	_setListeners() {
-		this.db.collection(this.eventsDirectory).doc("nil")
+		this.db.collection(this.eventsDirectory).doc("pollers").collection("contracts").doc(this.docName)
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				if (data) {
-					this.contractAddress = data[this.fieldName];
-					if (this.contractAddress?.length > 0) {
-						this.rpcUrl = data.rpcUrl;
+				if (data && data.contractAddress && data?.contractAddress?.length > 0) {
+					this.contractAddress = data.contractAddress;
+					this.rpcUrl = data.rpcUrl;
+					const paused = data.paused;
+					if (paused) {
+						if (this.contract) {
+							this.contract.removeAllListeners();
+						}
+						return;
+					} else {
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.StakeAdded(), (_stakeId, _staker, _collegeId, _amount, _year, _isNatty, _increase, eventObject) => this._handleStakeAddedEvent(eventObject));

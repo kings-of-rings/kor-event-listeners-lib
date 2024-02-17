@@ -11,6 +11,7 @@ const EVENTS_ABI = [
 
 export class DraftPickNFTListeners {
 	eventsDirectory: string;
+	docName: string = "draftPickNftsFootball";
 	fieldName: string;
 	chainId: number;
 	rpcUrl: string = "";
@@ -23,7 +24,8 @@ export class DraftPickNFTListeners {
 		this.chainId = chainId;
 		this.db = db;
 		this.eventsDirectory = eventsDirectory;
-		this.fieldName = isFootball ? "draftPickNFTsFootball" : "draftPickNFTsBasketball";
+		this.docName = isFootball ? "draftPickNFTsFootball" : "draftPickNFTsBasketball";
+
 		// Bind this to the event handlers
 		this._handleTokenDataSetEvent = this._handleTokenDataSetEvent.bind(this);
 	};
@@ -33,12 +35,19 @@ export class DraftPickNFTListeners {
 	}
 
 	_setListeners() {
-		this.db.collection(this.eventsDirectory).doc("collectible")
+		this.db.collection(this.eventsDirectory).doc("pollers").collection("contracts").doc(this.docName)
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				if (data) {
-					this.contractAddress = data.college;
-					if (this.contractAddress?.length > 0) {
+				if (data && data.contractAddress && data?.contractAddress?.length > 0) {
+					this.contractAddress = data.contractAddress;
+					this.rpcUrl = data.rpcUrl;
+					const paused = data.paused;
+					if (paused) {
+						if (this.contract) {
+							this.contract.removeAllListeners();
+						}
+						return;
+					} else {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);

@@ -11,6 +11,7 @@ const EVENTS_ABI = [
 
 export class ProRingSeriesListeners {
 	eventsDirectory: string;
+	docName: string = "proRingSeriesNft";
 	chainId: number;
 	rpcUrl: string = "";
 	contractAddress: string = "";
@@ -32,16 +33,22 @@ export class ProRingSeriesListeners {
 	}
 
 	_setListeners() {
-		this.db.collection(this.eventsDirectory).doc("ring")
+		this.db.collection(this.eventsDirectory).doc("pollers").collection("contracts").doc(this.docName)
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				if (data) {
-					this.contractAddress = data.pro;
-					if (this?.contractAddress?.length > 0) {
-						this.rpcUrl = data.rpcUrl;
+				if (data && data.contractAddress && data?.contractAddress?.length > 0) {
+					this.contractAddress = data.contractAddress;
+					this.rpcUrl = data.rpcUrl;
+					const paused = data.paused;
+					if (paused) {
+						if (this.contract) {
+							this.contract.removeAllListeners();
+						}
+						return;
+					} else {
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.TokenUriSet(), (_tokenId, _uri, eventObject)=> this._handleTokenUriSetEvent(eventObject));
+						this.contract.on(this.contract.filters.TokenUriSet(), (_tokenId, _uri, eventObject) => this._handleTokenUriSetEvent(eventObject));
 					}
 				}
 			});

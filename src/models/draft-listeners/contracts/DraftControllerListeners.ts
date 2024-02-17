@@ -17,7 +17,7 @@ const EVENTS_ABI = [
 
 export class DraftControllerListeners {
 	eventsDirectory: string;
-	fieldName: string;
+	docName: string = "draftControllerFootball";
 	chainId: number;
 	rpcUrl: string = "";
 	contractAddress: string = "";
@@ -26,11 +26,9 @@ export class DraftControllerListeners {
 	db: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore) {
-		console.log("DraftControllerListeners.constructor", chainId, eventsDirectory, isFootball);
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
-		this.fieldName = isFootball ? "draftControllerFootball" : "draftControllerBasketball";
-
+		this.docName = isFootball ? "draftControllerFootball" : "draftControllerBasketball";
 		this.db = db;
 		// Bind this to the event handlers
 		this._handleDraftPickClaimedEvent = this._handleDraftPickClaimedEvent.bind(this);
@@ -48,22 +46,30 @@ export class DraftControllerListeners {
 	}
 
 	_setListeners() {
-		this.db.collection(this.eventsDirectory).doc("collectible")
+
+		this.db.collection(this.eventsDirectory).doc("pollers").collection("contracts").doc(this.docName)
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				if (data) {
-					this.contractAddress = data[this.fieldName];
-					if (this.contractAddress?.length > 0) {
+				if (data && data.contractAddress && data?.contractAddress?.length > 0) {
+					this.contractAddress = data.contractAddress;
+					this.rpcUrl = data.rpcUrl;
+					const paused = data.paused;
+					if (paused) {
+						if (this.contract) {
+							this.contract.removeAllListeners();
+						}
+						return;
+					} else {
 						this.rpcUrl = data.rpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.DraftPickClaimed(), ( _claimingAddress,  _tokenId,  _draftBidId, _year, _isFootball, eventObject)=> this._handleDraftPickClaimedEvent(eventObject));
+						this.contract.on(this.contract.filters.DraftPickClaimed(), (_claimingAddress, _tokenId, _draftBidId, _year, _isFootball, eventObject) => this._handleDraftPickClaimedEvent(eventObject));
 						this.contract.on(this.contract.filters.DraftResultsFinalized(), (_resultsFinal, _year, _isFootball, eventObject) => this._handleDraftResultsFinalizedEvent(eventObject));
 						this.contract.on(this.contract.filters.DraftTimeSet(), (_startTs, _endTs, _year, _isFootball, eventObject) => this._handleDraftTimeSetEvent(eventObject));
-						this.contract.on(this.contract.filters.DraftStakeClaimed(), ( _bidId,  _year,  _claimingAddress, _amount, _isFootball, eventObject) => this._handleDraftStakeClaimedEvent(eventObject));
-						this.contract.on(this.contract.filters.DraftBidPlaced(), ( _bidId,  _bidder,  _duration, _amount, _points, _year, _isFootball, eventObject) => this._handleDraftBidPlacedEvent(eventObject));
-						this.contract.on(this.contract.filters.DraftBidIncreased(), ( _bidId,  _bidder,  _duration, _amountAdded, _points, _year, _isFootball, eventObject) => this._handleDraftBidIncreasedEvent(eventObject));
-						this.contract.on(this.contract.filters.ClaimingRequirementsSet(), ( _tokenId,  _year,  _isFootball, _amount, eventObject) => this._handleClaimingRequirementsSetEvent(eventObject));
+						this.contract.on(this.contract.filters.DraftStakeClaimed(), (_bidId, _year, _claimingAddress, _amount, _isFootball, eventObject) => this._handleDraftStakeClaimedEvent(eventObject));
+						this.contract.on(this.contract.filters.DraftBidPlaced(), (_bidId, _bidder, _duration, _amount, _points, _year, _isFootball, eventObject) => this._handleDraftBidPlacedEvent(eventObject));
+						this.contract.on(this.contract.filters.DraftBidIncreased(), (_bidId, _bidder, _duration, _amountAdded, _points, _year, _isFootball, eventObject) => this._handleDraftBidIncreasedEvent(eventObject));
+						this.contract.on(this.contract.filters.ClaimingRequirementsSet(), (_tokenId, _year, _isFootball, _amount, eventObject) => this._handleClaimingRequirementsSetEvent(eventObject));
 					}
 				}
 			});
@@ -178,7 +184,7 @@ export class DraftControllerListeners {
 			}
 			await saveError(errorData, this.db);
 		}
-}
+	}
 	async _handleClaimingRequirementsSetEvent(log: ethers.Event) {
 		const event = new ClaimingRequirementsSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "claimingRequirementsSet", this.db);

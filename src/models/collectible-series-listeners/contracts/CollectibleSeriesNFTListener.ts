@@ -11,6 +11,7 @@ const EVENTS_ABI = [
 
 export class CollectibleSeriesNFTListener {
 	eventsDirectory: string;
+	docName: string = "collectibleSeriesNfts";
 	chainId: number;
 	rpcUrl: string = "";
 	contractAddress: string = "";
@@ -31,16 +32,22 @@ export class CollectibleSeriesNFTListener {
 	}
 
 	_setListeners() {
-		this.db.collection(this.eventsDirectory).doc("collectible")
+		this.db.collection(this.eventsDirectory).doc("pollers").collection("contracts").doc(this.docName)
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				if (data) {
-					this.contractAddress = data.collectibleSeriesNfts;
-					if (this.contractAddress?.length > 0) {
-						this.rpcUrl = data.rpcUrl;
-						this.ethersProvider = getEthersProvider(this.rpcUrl);
-						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-						this.contract.on(this.contract.filters.TokenUriSet(), (_tokenId, _uri, eventObject) => this._handleTokenUriSetEvent(eventObject));
+				if (data && data.contractAddress && data?.contractAddress?.length > 0) {
+					this.contractAddress = data.contractAddress;
+					this.rpcUrl = data.rpcUrl;
+					const paused = data.paused;
+					if (paused) {
+						if (this.contract) {
+							this.contract.removeAllListeners();
+						}
+						return;
+					} else {
+							this.ethersProvider = getEthersProvider(this.rpcUrl);
+							this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
+							this.contract.on(this.contract.filters.TokenUriSet(), (_tokenId, _uri, eventObject) => this._handleTokenUriSetEvent(eventObject));
 					}
 				}
 			});
@@ -63,7 +70,7 @@ export class CollectibleSeriesNFTListener {
 			}
 			await saveError(errorData, this.db);
 		}
-}
+	}
 }
 
 export class CollectibleSeriesNFTListenerFactory {

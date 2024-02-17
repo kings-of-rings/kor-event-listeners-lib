@@ -13,6 +13,7 @@ const EVENTS_ABI = [
 
 export class CollegeRegistryListeners {
 	eventsDirectory: string;
+	docName: string = "collegeRegistry";
 	chainId: number;
 	rpcUrl: string = "";
 	contractAddress: string = "";
@@ -36,13 +37,19 @@ export class CollegeRegistryListeners {
 	}
 
 	_setListeners() {
-		this.db.collection(this.eventsDirectory).doc("registry")
+		this.db.collection(this.eventsDirectory).doc("pollers").collection("contracts").doc(this.docName)
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				if (data) {
-					this.contractAddress = data.college;
-					if (this.contractAddress?.length > 0) {
-						this.rpcUrl = data.rpcUrl;
+				if (data && data.contractAddress && data?.contractAddress?.length > 0) {
+					this.contractAddress = data.contractAddress;
+					this.rpcUrl = data.rpcUrl;
+					const paused = data.paused;
+					if (paused) {
+						if (this.contract) {
+							this.contract.removeAllListeners();
+						}
+						return;
+					} else {
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.CollegeAdded(), (_collegeId, _name, _conference, _mascot, _tier, _royalty, eventObject) => this._handleCollegeAddedEvent(eventObject));

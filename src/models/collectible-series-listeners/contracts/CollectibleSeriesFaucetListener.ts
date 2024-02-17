@@ -15,6 +15,7 @@ const EVENTS_ABI = [
 
 export class CollectibleSeriesFaucetListener {
 	eventsDirectory: string;
+	docName: string = "collectibleSeriesFaucetFootball";
 	chainId: number;
 	rpcUrl: string = "";
 	contractAddress: string = "";
@@ -22,10 +23,11 @@ export class CollectibleSeriesFaucetListener {
 	ethersProvider?: any;
 	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
+	constructor(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore) {
 		this.db = db;
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
+		this.docName = isFootball ? "collectibleSeriesFaucetFootball" : "collectibleSeriesFaucetBasketball";
 		// Bind this to the event handlers
 		this._handleAccessCreditsAddressEvent = this._handleAccessCreditsAddressEvent.bind(this);
 		this._handleAthletePriceSetEvent = this._handleAthletePriceSetEvent.bind(this);
@@ -39,19 +41,28 @@ export class CollectibleSeriesFaucetListener {
 	}
 
 	_setListeners() {
-		this.db.collection(this.eventsDirectory).doc("collectible")
+		this.db.collection(this.eventsDirectory).doc("pollers").collection("contracts").doc(this.docName)
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				if (data && data.collectibleFaucet && data?.collectibleFaucet?.length > 0) {
-					this.contractAddress = data.collectibleFaucet;
+				if (data && data.contractAddress && data?.contractAddress?.length > 0) {
+					this.contractAddress = data.contractAddress;
 					this.rpcUrl = data.rpcUrl;
-					this.ethersProvider = getEthersProvider(this.rpcUrl);
-					this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-					this.contract.on(this.contract.filters.AccessCreditsAddress(), (_year, _isFootball, _address, eventObject) => this._handleAccessCreditsAddressEvent(eventObject));
-					this.contract.on(this.contract.filters.AthletePriceSet(), (_athleteId, _year, _price, eventObject) => this._handleAthletePriceSetEvent(eventObject));
-					this.contract.on(this.contract.filters.CollectibleFaucetTimeSet(), (_open, _freeAgency, _close, _year, _isFootball, eventObject) => this._handleCollectibleFaucetTimeSetEvent(eventObject));
-					this.contract.on(this.contract.filters.LevelAdded(), (_level, _levelEnds, _qtyAllowed, _increasePercentage, _year, _isFootball, eventObject) => this._handleLevelAddedEvent(eventObject));
-					this.contract.on(this.contract.filters.CollectibleFaucetSale(), (_saleId, _athleteId, _buyer, _qty, _totalCost, _year, _isFootball, eventObject) => this._handleCollectibleFaucetSaleEvent(eventObject));
+					const paused = data.paused;
+					if (paused) {
+						if (this.contract) {
+							this.contract.removeAllListeners();
+						}
+						return;
+					} else {
+							this.ethersProvider = getEthersProvider(this.rpcUrl);
+							this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
+							this.contract.on(this.contract.filters.AccessCreditsAddress(), (_year, _isFootball, _address, eventObject) => this._handleAccessCreditsAddressEvent(eventObject));
+							this.contract.on(this.contract.filters.AthletePriceSet(), (_athleteId, _year, _price, eventObject) => this._handleAthletePriceSetEvent(eventObject));
+							this.contract.on(this.contract.filters.CollectibleFaucetTimeSet(), (_open, _freeAgency, _close, _year, _isFootball, eventObject) => this._handleCollectibleFaucetTimeSetEvent(eventObject));
+							this.contract.on(this.contract.filters.LevelAdded(), (_level, _levelEnds, _qtyAllowed, _increasePercentage, _year, _isFootball, eventObject) => this._handleLevelAddedEvent(eventObject));
+							this.contract.on(this.contract.filters.CollectibleFaucetSale(), (_saleId, _athleteId, _buyer, _qty, _totalCost, _year, _isFootball, eventObject) => this._handleCollectibleFaucetSaleEvent(eventObject));
+						}
+					
 				}
 			});
 	}
@@ -145,12 +156,13 @@ export class CollectibleSeriesFaucetListener {
 			}
 			await saveError(errorData, this.db);
 		}
-}
+	}
+
 }
 
 export class CollectibleSeriesFaucetListenerFactory {
-	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): CollectibleSeriesFaucetListener {
-		const itemToReturn = new CollectibleSeriesFaucetListener(chainId, eventsDirectory, db);
+	static startListeners(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore): CollectibleSeriesFaucetListener {
+		const itemToReturn = new CollectibleSeriesFaucetListener(chainId, eventsDirectory, isFootball, db);
 		itemToReturn.startListeners();
 		return itemToReturn;
 	}

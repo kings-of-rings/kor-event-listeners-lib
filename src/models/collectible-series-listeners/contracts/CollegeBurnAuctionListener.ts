@@ -14,6 +14,7 @@ const EVENTS_ABI = [
 
 export class CollegeBurnAuctionListener {
 	eventsDirectory: string;
+	docName: string = "collegeBurnAuctionFootball";
 	chainId: number;
 	rpcUrl: string = "";
 	contractAddress: string = "";
@@ -21,10 +22,11 @@ export class CollegeBurnAuctionListener {
 	ethersProvider?: any;
 	db: admin.firestore.Firestore;
 
-	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
+	constructor(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
 		this.db = db;
+		this.docName = isFootball ? "collegeBurnAuctionFootball" : "collegeBurnAuctionBasketball";
 		// Bind this to the event handlers
 		this._handleBurnBidPlacedEvent = this._handleBurnBidPlacedEvent.bind(this);
 		this._handleBurnBidIncreasedEvent = this._handleBurnBidIncreasedEvent.bind(this);
@@ -37,18 +39,26 @@ export class CollegeBurnAuctionListener {
 	}
 
 	_setListeners() {
-		this.db.collection(this.eventsDirectory).doc("collectible")
+		this.db.collection(this.eventsDirectory).doc("pollers").collection("contracts").doc(this.docName)
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				this.contractAddress = data.burnAuction;
+				this.contractAddress = data.contractAddress;
 				if (this.contractAddress?.length > 0) {
 					this.rpcUrl = data.rpcUrl;
-					this.ethersProvider = getEthersProvider(this.rpcUrl);
-					this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-					this.contract.on(this.contract.filters.BurnBidPlaced(), (_bidId, _bidder, _tokenId, _increasedAmount, _totalBid, _year, _isFootball, eventObject) => this._handleBurnBidPlacedEvent(eventObject));
-					this.contract.on(this.contract.filters.BurnBidIncreased(), (_bidId, _bidder, _tokenId, _bidAmount, _bidCount, _year, _isFootball, eventObject) => this._handleBurnBidIncreasedEvent(eventObject));
-					this.contract.on(this.contract.filters.BurnAuctionTimeSet(), (_year, _isFootball, _start, _end, eventObject) => this._handleBurnAuctionTimeSetEvent(eventObject));
-					this.contract.on(this.contract.filters.RemoveBid(), (_bidId, _bidder, _tokenId, _bidAmount, _year, _isFootball, eventObject) => this._handleRemoveBidEvent(eventObject));
+					const paused = data.paused;
+					if (paused) {
+						if (this.contract) {
+							this.contract.removeAllListeners();
+						}
+						return;
+					} else {
+						this.ethersProvider = getEthersProvider(this.rpcUrl);
+						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
+						this.contract.on(this.contract.filters.BurnBidPlaced(), (_bidId, _bidder, _tokenId, _increasedAmount, _totalBid, _year, _isFootball, eventObject) => this._handleBurnBidPlacedEvent(eventObject));
+						this.contract.on(this.contract.filters.BurnBidIncreased(), (_bidId, _bidder, _tokenId, _bidAmount, _bidCount, _year, _isFootball, eventObject) => this._handleBurnBidIncreasedEvent(eventObject));
+						this.contract.on(this.contract.filters.BurnAuctionTimeSet(), (_year, _isFootball, _start, _end, eventObject) => this._handleBurnAuctionTimeSetEvent(eventObject));
+						this.contract.on(this.contract.filters.RemoveBid(), (_bidId, _bidder, _tokenId, _bidAmount, _year, _isFootball, eventObject) => this._handleRemoveBidEvent(eventObject));
+					}
 				}
 			});
 	}
@@ -70,7 +80,7 @@ export class CollegeBurnAuctionListener {
 			}
 			await saveError(errorData, this.db);
 		}
-}
+	}
 	async _handleBurnBidIncreasedEvent(log: ethers.Event) {
 		const event = new BurnBidIncreased(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnBidIncreased", this.db);
@@ -88,7 +98,7 @@ export class CollegeBurnAuctionListener {
 			}
 			await saveError(errorData, this.db);
 		}
-}
+	}
 	async _handleBurnAuctionTimeSetEvent(log: ethers.Event) {
 		const event = new BurnAuctionTimeSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnAuctionTimeSet", this.db);
@@ -96,7 +106,7 @@ export class CollegeBurnAuctionListener {
 		const result: any = await event.saveData(endpoint, apiKey);
 		if (result.status === undefined) {
 			const errorData = {
-				"error": "Error in BurnAuctionTimeSet.saveData", 
+				"error": "Error in BurnAuctionTimeSet.saveData",
 				"result": result.response.data,
 				"endpoint": endpoint,
 				"txHash": log.transactionHash,
@@ -113,8 +123,8 @@ export class CollegeBurnAuctionListener {
 }
 
 export class CollegeBurnAuctionListenerFactory {
-	static startListeners(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore): CollegeBurnAuctionListener {
-		const itemToReturn = new CollegeBurnAuctionListener(chainId, eventsDirectory, db);
+	static startListeners(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore): CollegeBurnAuctionListener {
+		const itemToReturn = new CollegeBurnAuctionListener(chainId, eventsDirectory, isFootball, db);
 		itemToReturn.startListeners();
 		return itemToReturn;
 	}

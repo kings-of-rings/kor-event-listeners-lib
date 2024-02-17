@@ -16,6 +16,7 @@ const EVENTS_ABI = [
 
 export class AthleteRegistryListeners {
 	eventsDirectory: string;
+	docName: string = "athleteRegistry";
 	chainId: number;
 	rpcUrl: string = "";
 	contractAddress: string = "";
@@ -24,7 +25,6 @@ export class AthleteRegistryListeners {
 	db: admin.firestore.Firestore;
 
 	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
-		console.log('AthleteRegistryListeners');
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
 		this.db = db;
@@ -41,13 +41,20 @@ export class AthleteRegistryListeners {
 	}
 
 	_setListeners() {
-		this.db.collection(this.eventsDirectory).doc("registry")
+
+		this.db.collection(this.eventsDirectory).doc("pollers").collection("contracts").doc(this.docName)
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				if (data) {
-					this.contractAddress = data.athlete;
-					if (this.contractAddress?.length > 0) {
-						this.rpcUrl = data.rpcUrl;
+				if (data && data.contractAddress && data?.contractAddress?.length > 0) {
+					this.contractAddress = data.contractAddress;
+					this.rpcUrl = data.rpcUrl;
+					const paused = data.paused;
+					if (paused) {
+						if (this.contract) {
+							this.contract.removeAllListeners();
+						}
+						return;
+					} else {
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.ActiveYearAdded(), (_athleteId, _year, eventObject) => this._handleActiveYearAddedEvent(eventObject));
