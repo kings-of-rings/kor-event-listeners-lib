@@ -24,7 +24,7 @@ export class DraftPickNFTListeners {
 		this.chainId = chainId;
 		this.db = db;
 		this.eventsDirectory = eventsDirectory;
-		this.docName = isFootball ? "draftPickNFTsFootball" : "draftPickNFTsBasketball";
+		this.docName = isFootball ? "draftPickNftsFootball" : "draftPickNftsBasketball";
 
 		// Bind this to the event handlers
 		this._handleTokenDataSetEvent = this._handleTokenDataSetEvent.bind(this);

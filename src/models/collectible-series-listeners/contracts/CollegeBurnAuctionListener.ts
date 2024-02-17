@@ -118,6 +118,7 @@ export class CollegeBurnAuctionListener {
 		}
 	}
 	async _handleRemoveBidEvent(log: ethers.Event) {
+		//TODO Implement
 		//console.log("Event", log);
 	}
 }

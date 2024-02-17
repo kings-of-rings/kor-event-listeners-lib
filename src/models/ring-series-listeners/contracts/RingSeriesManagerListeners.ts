@@ -4,13 +4,11 @@ import * as admin from "firebase-admin";
 import { getEndpoint } from "../../../utils/getEndpoint";
 import { getEthersProvider } from "../../../utils/getEthersProvider";
 import { saveError } from "../../../utils/saveError";
-
 const EVENTS_ABI = [
-	"event AthleteRingSeriesQtySet(uint256 _athleteId, uint256 _maxQty, uint256 _athleteQty)",
-	"event AthleteRingSeriesEligibilitySet(uint256 _athleteId, bool _isEligible)",
-	"event RingSeriesYearAdded(uint256 _athleteId, uint16 _year)"
+	"event AthleteRingSeriesQtySet(uint256 indexed _athleteId, uint256 _maxQty, uint256 _athleteQty)",
+	"event AthleteRingSeriesEligibilitySet(uint256 indexed _athleteId, bool _isEligible)",
+	"event RingSeriesYearAdded(uint256 indexed _athleteId, uint16 indexed _year)"
 ];
-
 export class RingSeriesManagerListeners {
 	eventsDirectory: string;
 	docName: string = "ringSeriesManager";
