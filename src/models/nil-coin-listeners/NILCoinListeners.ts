@@ -6,8 +6,8 @@ import { NILCoinFaucetListeners, NILCoinFaucetListenersFactory } from "./contrac
 export class NILCoinListeners {
 	chainId: number;
 	eventsDirectory: string;
-	coinFaucetListeners: NILCoinFaucetListeners;
-	lpManagerListeners: LPManagerListeners;
+	coinFaucetListeners?: NILCoinFaucetListeners;
+	lpManagerListeners?: LPManagerListeners;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;

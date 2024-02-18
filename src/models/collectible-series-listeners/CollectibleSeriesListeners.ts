@@ -6,11 +6,11 @@ import { CollegeBurnAuctionListener, CollegeBurnAuctionListenerFactory } from ".
 export class CollectibleSeriesListeners {
 	chainId: number;
 	eventsDirectory: string;
-	nftListeners: CollectibleSeriesNFTListener;
-	basketballFaucetListeners: CollectibleSeriesFaucetListener;
-	footballFaucetListeners: CollectibleSeriesFaucetListener;
-	basketballBurnAuctionListeners: CollegeBurnAuctionListener;
-	footballBurnAuctionListeners: CollegeBurnAuctionListener;
+	nftListeners?: CollectibleSeriesNFTListener;
+	basketballFaucetListeners?: CollectibleSeriesFaucetListener;
+	footballFaucetListeners?: CollectibleSeriesFaucetListener;
+	basketballBurnAuctionListeners?: CollegeBurnAuctionListener;
+	footballBurnAuctionListeners?: CollegeBurnAuctionListener;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;

@@ -1,6 +1,6 @@
 {
   "name": "@kings-of-rings/kor-event-listeners-lib",
-  "version": "0.0.73",
+  "version": "0.0.74",
   "description": "",
   "main": "lib/index.js",
   "publishConfig": {

@@ -12,15 +12,15 @@ import { StakingListeners, StakingListenersFactory } from "./staking/StakingList
 export class KoREventListeners {
 	chainId: number;
 	eventsDirectory: string;
-	erc20Listeners: ERC20Listeners;
-	erc721Listeners: ERC721Listeners;
-	erc1155Listeners: ERC1155Listeners;
-	registryListeners: RegistryListeners;
-	draftListeners: DraftListeners;
-	nilListeners: NILCoinListeners;
-	collectibleSeriesListeners: CollectibleSeriesListeners;
-	ringSeriesListeners: RingSeriesListeners;
-	stakingListeners: StakingListeners;
+	erc20Listeners?: ERC20Listeners;
+	erc721Listeners?: ERC721Listeners;
+	erc1155Listeners?: ERC1155Listeners;
+	registryListeners?: RegistryListeners;
+	draftListeners?: DraftListeners;
+	nilListeners?: NILCoinListeners;
+	collectibleSeriesListeners?: CollectibleSeriesListeners;
+	ringSeriesListeners?: RingSeriesListeners;
+	stakingListeners?: StakingListeners;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;

@@ -4,10 +4,10 @@ import { TeamStakingListeners, TeamStakingListenersFactory } from "./contracts/T
 export class StakingListeners {
 	chainId: number;
 	eventsDirectory: string;
-	teamStakingCurrent: TeamStakingListeners;
-	nattyStakingCurrent: TeamStakingListeners;
-	teamStakingPrevious: TeamStakingListeners;
-	nattyStakingPrevious: TeamStakingListeners;
+	teamStakingCurrent?: TeamStakingListeners;
+	nattyStakingCurrent?: TeamStakingListeners;
+	teamStakingPrevious?: TeamStakingListeners;
+	nattyStakingPrevious?: TeamStakingListeners;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;

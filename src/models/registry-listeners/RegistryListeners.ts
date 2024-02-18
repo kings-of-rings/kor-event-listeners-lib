@@ -8,11 +8,11 @@ import { ProRegistryListeners, ProRegistryListenersFactory } from "./contracts/P
 export class RegistryListeners {
 	chainId: number;
 	eventsDirectory: string;
-	athleteRegistry: AthleteRegistryListeners;
-	collegeRegistry: CollegeRegistryListeners;
-	directory: DirectoryListeners;
-	proRegistry: ProRegistryListeners;
-	paymentManager: AthletePaymentManagerListeners;
+	athleteRegistry?: AthleteRegistryListeners;
+	collegeRegistry?: CollegeRegistryListeners;
+	directory?: DirectoryListeners;
+	proRegistry?: ProRegistryListeners;
+	paymentManager?: AthletePaymentManagerListeners;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;

@@ -4,10 +4,10 @@ import { DraftPickNFTListeners, DraftPickNFTListenersFactory } from "./contracts
 export class DraftListeners {
 	chainId: number;
 	eventsDirectory: string;
-	draftControllerBasketball: DraftControllerListeners;
-	draftPickNFTsBasketball: DraftPickNFTListeners;
-	draftControllerFootball: DraftControllerListeners;
-	draftPickNFTsFootball: DraftPickNFTListeners;
+	draftControllerBasketball?: DraftControllerListeners;
+	draftPickNFTsBasketball?: DraftPickNFTListeners;
+	draftControllerFootball?: DraftControllerListeners;
+	draftPickNFTsFootball?: DraftPickNFTListeners;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;

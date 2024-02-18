@@ -42,10 +42,10 @@ export class CollegeBurnAuctionListener {
 		this.db.collection(this.eventsDirectory).doc("pollers").collection("contracts").doc(this.docName)
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				this.contractAddress = data.contractAddress;
-				if (this.contractAddress?.length > 0) {
-					this.rpcUrl = data.listenerRpcUrl;
-					const paused = data.paused;
+				if (data && data.contractAddress && data.contractAddress.length > 0) {
+					this.contractAddress = data.contractAddress;
+					this.rpcUrl = data?.listenerRpcUrl;
+					const paused = data?.paused;
 					if (paused) {
 						if (this.contract) {
 							this.contract.removeAllListeners();

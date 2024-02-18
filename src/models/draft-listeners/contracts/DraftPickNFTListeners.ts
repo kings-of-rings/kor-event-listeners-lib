@@ -12,7 +12,6 @@ const EVENTS_ABI = [
 export class DraftPickNFTListeners {
 	eventsDirectory: string;
 	docName: string = "draftPickNftsFootball";
-	fieldName: string;
 	chainId: number;
 	rpcUrl: string = "";
 	contractAddress: string = "";

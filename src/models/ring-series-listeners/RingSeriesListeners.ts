@@ -6,9 +6,9 @@ import { RingSeriesManagerListeners, RingSeriesManagerListenersFactory } from ".
 export class RingSeriesListeners {
 	chainId: number;
 	eventsDirectory: string;
-	collegeListeners: CollegeRingSeriesListeners;
-	proListeners: ProRingSeriesListeners;
-	managerListeners: RingSeriesManagerListeners;
+	collegeListeners?: CollegeRingSeriesListeners;
+	proListeners?: ProRingSeriesListeners;
+	managerListeners?: RingSeriesManagerListeners;
 
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
