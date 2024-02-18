@@ -18,7 +18,7 @@ export class ERC20Listeners {
 	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
-		this.db = db;	
+		this.db = db;
 		// Bind this to the event handlers
 		this._handleTransferEvent = this._handleTransferEvent.bind(this);
 	};
@@ -32,7 +32,7 @@ export class ERC20Listeners {
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
-					this.rpcUrl = data.rpcUrl;
+					this.rpcUrl = data.listenerRpcUrl;
 					this._setContractAddresses(data.contracts);
 					this.ethersProvider = getEthersProvider(this.rpcUrl);
 					this._setContractListeners();

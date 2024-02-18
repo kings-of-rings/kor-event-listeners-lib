@@ -45,7 +45,7 @@ export class TeamStakingListeners {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data && data.contractAddress && data?.contractAddress?.length > 0) {
 					this.contractAddress = data.contractAddress;
-					this.rpcUrl = data.rpcUrl;
+					this.rpcUrl = data.listenerRpcUrl;
 					const paused = data.paused;
 					if (paused) {
 						if (this.contract) {
@@ -68,7 +68,7 @@ export class TeamStakingListeners {
 		const endpoint = await getEndpoint(this.eventsDirectory, "teamStakeAdded", this.db);
 		const apiKey = process.env.LAMBDA_API_KEY ? process.env.LAMBDA_API_KEY : "";
 		const result: any = await event.saveData(endpoint, apiKey, this.ethersProvider);
-		
+
 		if (result.status === undefined) {
 			const errorData = {
 				"error": "Error in HandleStakeAddedEvent.saveData",

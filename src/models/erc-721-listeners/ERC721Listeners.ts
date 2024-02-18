@@ -31,7 +31,7 @@ export class ERC721Listeners {
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
-					this.rpcUrl = data.rpcUrl;
+					this.rpcUrl = data.listenerRpcUrl;
 					this._setContractAddresses(data.contracts);
 					this.ethersProvider = getEthersProvider(this.rpcUrl);
 					this._setContractListeners();
@@ -55,7 +55,7 @@ export class ERC721Listeners {
 	}
 	_setContractListener(contractAddress: string) {
 		const contract = new ethers.Contract(contractAddress, EVENTS_ABI, this.ethersProvider);
-		contract.on(contract.filters.Transfer(), (from, to, tokenId, eventObject)=> this._handleTransferEvent(eventObject));
+		contract.on(contract.filters.Transfer(), (from, to, tokenId, eventObject) => this._handleTransferEvent(eventObject));
 	}
 
 	_handleTransferEvent = async (log: ethers.Event) => {

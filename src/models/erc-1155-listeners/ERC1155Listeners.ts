@@ -17,7 +17,7 @@ export class ERC1155Listeners {
 	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
-		this.db = db;		
+		this.db = db;
 		// Bind this to the event handlers
 		this._handleTransferSingleEvent = this._handleTransferSingleEvent.bind(this);
 	};
@@ -31,7 +31,7 @@ export class ERC1155Listeners {
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data) {
-					this.rpcUrl = data.rpcUrl;
+					this.rpcUrl = data.listenerRpcUrl;
 					this._setContractAddresses(data.contracts);
 					this.ethersProvider = getEthersProvider(this.rpcUrl);
 					this._setContractListeners(this.db);
@@ -55,7 +55,7 @@ export class ERC1155Listeners {
 	}
 	_setContractListener(contractAddress: string) {
 		const contract = new ethers.Contract(contractAddress, EVENTS_ABI, this.ethersProvider);
-		contract.on(contract.filters.TransferSingle(), (operator, from, to, id, value, eventObject)=> this._handleTransferSingleEvent(eventObject));
+		contract.on(contract.filters.TransferSingle(), (operator, from, to, id, value, eventObject) => this._handleTransferSingleEvent(eventObject));
 	}
 
 	_handleTransferSingleEvent = async (log: ethers.Event) => {

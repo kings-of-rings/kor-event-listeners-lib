@@ -44,7 +44,7 @@ export class CollegeBurnAuctionListener {
 				const data: Record<string, any> | undefined = doc.data();
 				this.contractAddress = data.contractAddress;
 				if (this.contractAddress?.length > 0) {
-					this.rpcUrl = data.rpcUrl;
+					this.rpcUrl = data.listenerRpcUrl;
 					const paused = data.paused;
 					if (paused) {
 						if (this.contract) {

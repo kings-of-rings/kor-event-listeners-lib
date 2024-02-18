@@ -37,7 +37,7 @@ export class CollectibleSeriesNFTListener {
 				const data: Record<string, any> | undefined = doc.data();
 				if (data && data.contractAddress && data?.contractAddress?.length > 0) {
 					this.contractAddress = data.contractAddress;
-					this.rpcUrl = data.rpcUrl;
+					this.rpcUrl = data.listenerRpcUrl;
 					const paused = data.paused;
 					if (paused) {
 						if (this.contract) {
@@ -45,9 +45,9 @@ export class CollectibleSeriesNFTListener {
 						}
 						return;
 					} else {
-							this.ethersProvider = getEthersProvider(this.rpcUrl);
-							this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
-							this.contract.on(this.contract.filters.TokenUriSet(), (_tokenId, _uri, eventObject) => this._handleTokenUriSetEvent(eventObject));
+						this.ethersProvider = getEthersProvider(this.rpcUrl);
+						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
+						this.contract.on(this.contract.filters.TokenUriSet(), (_tokenId, _uri, eventObject) => this._handleTokenUriSetEvent(eventObject));
 					}
 				}
 			});
