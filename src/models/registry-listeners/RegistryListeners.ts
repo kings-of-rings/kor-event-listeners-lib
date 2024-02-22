@@ -14,6 +14,7 @@ export class RegistryListeners {
 	proRegistry?: ProRegistryListeners;
 	paymentManager?: AthletePaymentManagerListeners;
 
+
 	constructor(chainId: number, eventsDirectory: string) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;

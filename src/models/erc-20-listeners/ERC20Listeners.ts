@@ -14,6 +14,8 @@ export class ERC20Listeners {
 	contractAddresses: string[] = [];
 	ethersProvider?: any;
 	db: admin.firestore.Firestore;
+	isRunning: boolean = false;
+
 
 	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
@@ -31,11 +33,12 @@ export class ERC20Listeners {
 		this.db.collection(this.eventsDirectory).doc("erc20")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
-				if (data) {
+				if (data && this.isRunning === false) {
 					this.rpcUrl = data.listenerRpcUrl;
 					this._setContractAddresses(data.contracts);
 					this.ethersProvider = getEthersProvider(this.rpcUrl);
 					this._setContractListeners();
+					this.isRunning = true;
 				}
 			});
 

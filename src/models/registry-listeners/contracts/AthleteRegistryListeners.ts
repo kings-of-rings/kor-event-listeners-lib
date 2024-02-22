@@ -23,6 +23,8 @@ export class AthleteRegistryListeners {
 	contract?: ethers.Contract;
 	ethersProvider?: any;
 	db: admin.firestore.Firestore;
+	isRunning: boolean = false;
+
 
 	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
@@ -53,8 +55,10 @@ export class AthleteRegistryListeners {
 						if (this.contract) {
 							this.contract.removeAllListeners();
 						}
+						this.isRunning = false;
+
 						return;
-					} else {
+					} else if (!this.isRunning) {
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.ActiveYearAdded(), (_athleteId, _year, eventObject) => this._handleActiveYearAddedEvent(eventObject));
@@ -62,6 +66,7 @@ export class AthleteRegistryListeners {
 						this.contract.on(this.contract.filters.AthleteNameChanged(), (_athleteId, _displayName, _lastName, _middleName, _firstName, eventObject) => this._handleAthleteNameChangedEvent(eventObject));
 						this.contract.on(this.contract.filters.AthleteCollegeChanged(), (_athleteId, _collegeId, _jerseyNumber, _position, eventObject) => this._handleAthleteCollegeChangedEvent(eventObject));
 						this.contract.on(this.contract.filters.AthleteProTeamChanged(), (_athleteId, _proTeamId, _jerseyNumber, _position, eventObject) => this._handleAthleteProTeamChangedEvent(eventObject));
+						this.isRunning = true;
 					}
 				}
 			});

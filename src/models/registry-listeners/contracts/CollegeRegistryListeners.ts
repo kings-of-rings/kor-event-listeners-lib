@@ -20,6 +20,8 @@ export class CollegeRegistryListeners {
 	contract?: ethers.Contract;
 	ethersProvider?: any;
 	db: admin.firestore.Firestore;
+	isRunning: boolean = false;
+
 
 	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
@@ -48,13 +50,16 @@ export class CollegeRegistryListeners {
 						if (this.contract) {
 							this.contract.removeAllListeners();
 						}
+						this.isRunning = false;
+
 						return;
-					} else {
+					} else if (!this.isRunning) {
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.CollegeAdded(), (_collegeId, _name, _conference, _mascot, _tier, _royalty, eventObject) => this._handleCollegeAddedEvent(eventObject));
 						this.contract.on(this.contract.filters.CollegeChanged(), (_collegeId, _name, _conference, _mascot, _royalty, eventObject) => this._handleCollegeChangedEvent(eventObject));
 						this.contract.on(this.contract.filters.TierChanged(), (_collegeId, _tier, eventObject) => this._handleTierChangedEvent(eventObject));
+						this.isRunning = true;
 					}
 				}
 			});

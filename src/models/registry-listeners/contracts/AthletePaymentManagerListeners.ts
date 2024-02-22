@@ -19,6 +19,7 @@ export class AthletePaymentManagerListeners {
 	contract?: ethers.Contract;
 	ethersProvider?: any;
 	db: admin.firestore.Firestore;
+	isRunning: boolean = false;
 
 	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
@@ -45,12 +46,15 @@ export class AthletePaymentManagerListeners {
 						if (this.contract) {
 							this.contract.removeAllListeners();
 						}
+						this.isRunning = false;
+
 						return;
-					} else {
+					} else if (!this.isRunning) {
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.PaymentReceived(), (_paymentId, _athleteId, _paymentToken, _amount, _balance, eventObject) => this._handleAthletePaymentReceivedEvent(eventObject));
 						this.contract.on(this.contract.filters.PaymentDisbursed(), (_disbursementId, _athleteId, _paymentToken, _disbursementAddress, _amount, eventObject) => this._handleAthletePaymentDisbursedEvent(eventObject));
+						this.isRunning = true;
 					}
 				}
 			});

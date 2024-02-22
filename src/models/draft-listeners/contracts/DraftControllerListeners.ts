@@ -24,6 +24,8 @@ export class DraftControllerListeners {
 	contract?: ethers.Contract;
 	ethersProvider?: any;
 	db: admin.firestore.Firestore;
+	isRunning: boolean = false;
+
 
 	constructor(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
@@ -58,8 +60,9 @@ export class DraftControllerListeners {
 						if (this.contract) {
 							this.contract.removeAllListeners();
 						}
+						this.isRunning = false;
 						return;
-					} else {
+					} else if (!this.isRunning) {
 						this.rpcUrl = data.listenerRpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
@@ -70,6 +73,7 @@ export class DraftControllerListeners {
 						this.contract.on(this.contract.filters.DraftBidPlaced(), (_bidId, _bidder, _duration, _amount, _points, _year, _isFootball, eventObject) => this._handleDraftBidPlacedEvent(eventObject));
 						this.contract.on(this.contract.filters.DraftBidIncreased(), (_bidId, _bidder, _duration, _amountAdded, _points, _year, _isFootball, eventObject) => this._handleDraftBidIncreasedEvent(eventObject));
 						this.contract.on(this.contract.filters.ClaimingRequirementsSet(), (_tokenId, _year, _isFootball, _amount, eventObject) => this._handleClaimingRequirementsSetEvent(eventObject));
+						this.isRunning = true;
 					}
 				}
 			});

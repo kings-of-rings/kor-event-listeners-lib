@@ -21,6 +21,8 @@ export class DirectoryListeners {
 	contract?: ethers.Contract;
 	ethersProvider?: any;
 	db: admin.firestore.Firestore;
+	isRunning: boolean = false;
+
 
 	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.db = db;
@@ -51,14 +53,17 @@ export class DirectoryListeners {
 						if (this.contract) {
 							this.contract.removeAllListeners();
 						}
+						this.isRunning = false;
+
 						return;
-					} else {
+					} else if (!this.isRunning) {
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.DraftControllerAdded(), (_year, _address, _isFootball, eventObject) => this._handleDraftControllerAddedEvent(eventObject));
 						this.contract.on(this.contract.filters.RingSeriesTokenContractAdded(), (_year, address, eventObject) => this._handleRingSeriesTokenContractAddedEvent(eventObject));
 						this.contract.on(this.contract.filters.CollectibleSeriesFaucetContractAdded(), (_year, _address, _isFootball, eventObject) => this._handleCollectibleSeriesFaucetContractAddedEvent(eventObject));
 						this.contract.on(this.contract.filters.CollectibleSeriesTokenContractAdded(), (_year, _address, eventObject) => this._handleCollectibleSeriesTokenContractAddedEvent(eventObject));
+						this.isRunning = true;
 					}
 				}
 			});

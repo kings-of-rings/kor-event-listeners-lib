@@ -18,6 +18,8 @@ export class LPManagerListeners {
 	contract?: ethers.Contract;
 	ethersProvider?: any;
 	db: admin.firestore.Firestore;
+	isRunning: boolean = false;
+
 
 	constructor(chainId: number, eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
@@ -44,6 +46,8 @@ export class LPManagerListeners {
 						if (this.contract) {
 							this.contract.removeAllListeners();
 						}
+						this.isRunning = false;
+
 						return;
 					} else {
 						this.rpcUrl = data.listenerRpcUrl;

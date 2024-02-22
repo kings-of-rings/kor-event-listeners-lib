@@ -20,6 +20,8 @@ export class TeamStakingListeners {
 	contract?: ethers.Contract;
 	ethersProvider?: any;
 	db: admin.firestore.Firestore;
+	isRunning: boolean = false;
+
 
 	constructor(chainId: number, eventsDirectory: string, isNatty: boolean, isCurrentYear: boolean, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
@@ -51,13 +53,16 @@ export class TeamStakingListeners {
 						if (this.contract) {
 							this.contract.removeAllListeners();
 						}
+						this.isRunning = false;
+
 						return;
-					} else {
+					} else if (!this.isRunning) {
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.StakeAdded(), (_stakeId, _staker, _collegeId, _amount, _year, _isNatty, _increase, eventObject) => this._handleStakeAddedEvent(eventObject));
 						this.contract.on(this.contract.filters.StakeClaimed(), (_stakeId, _staker, _collegeId, _amount, _year, _isNatty, eventObject) => this._handleStakeClaimedEvent(eventObject));
 						this.contract.on(this.contract.filters.StakingTimeSet(), (_stakingOpens, _stakingCloses, _claimableTs, _year, _isNatty, eventObject) => this._handleStakingTimeSetEvent(eventObject));
+						this.isRunning = true;
 					}
 				}
 			});

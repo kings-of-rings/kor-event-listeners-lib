@@ -18,6 +18,8 @@ export class DraftPickNFTListeners {
 	contract?: ethers.Contract;
 	ethersProvider?: any;
 	db: admin.firestore.Firestore;
+	isRunning: boolean = false;
+
 
 	constructor(chainId: number, eventsDirectory: string, isFootball: boolean, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
@@ -45,12 +47,15 @@ export class DraftPickNFTListeners {
 						if (this.contract) {
 							this.contract.removeAllListeners();
 						}
+						this.isRunning = false;
+
 						return;
-					} else {
+					} else if (!this.isRunning) {
 						this.rpcUrl = data.listenerRpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 						this.contract.on(this.contract.filters.TokenDataSet(), (_tokenId, _round, _slot, _startTs, _uri, _year, _isFootball, eventObject) => this._handleTokenDataSetEvent(eventObject));
+						this.isRunning = true;
 					}
 				}
 			});
