@@ -47,7 +47,6 @@ export class LPManagerListeners {
 							this.contract.removeAllListeners();
 						}
 						this.isRunning = false;
-
 						return;
 					} else if (!this.isRunning) {
 						this.rpcUrl = data.listenerRpcUrl;
