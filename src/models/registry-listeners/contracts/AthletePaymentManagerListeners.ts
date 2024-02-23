@@ -47,7 +47,6 @@ export class AthletePaymentManagerListeners {
 							this.contract.removeAllListeners();
 						}
 						this.isRunning = false;
-
 						return;
 					} else if (!this.isRunning) {
 						this.ethersProvider = getEthersProvider(this.rpcUrl);

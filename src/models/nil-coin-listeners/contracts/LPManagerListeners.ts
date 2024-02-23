@@ -49,7 +49,7 @@ export class LPManagerListeners {
 						this.isRunning = false;
 
 						return;
-					} else {
+					} else if (!this.isRunning) {
 						this.rpcUrl = data.listenerRpcUrl;
 						this.ethersProvider = getEthersProvider(this.rpcUrl);
 						this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
